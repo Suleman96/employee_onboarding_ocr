@@ -23,4 +23,6 @@ loguru
 tenacity
 apscheduler
 sqlalchemy
+python-multipart # This is used for handling file uploads in FastAPI
+docxtpl
 
