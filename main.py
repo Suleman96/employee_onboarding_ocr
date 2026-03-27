@@ -15,6 +15,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from database import create_tables, get_db, Employee, AuditLog
 from contracts.generator import generate_contract_for_employee
+from pathlib import Path
 
 from typing import List
 from schemas import EmployeeCreate, EmployeeUpdate, EmployeeResponse, AuditLogResponse
@@ -36,6 +37,16 @@ app = FastAPI(lifespan=lifespan, # This tells FastAPI to use the lifespan functi
               version="0.1.0")
 
 templates = Jinja2Templates(directory = "templates")
+
+
+def normalize_hotel_name(hotel_name_select: str | None, hotel_name_custom: str | None) -> str | None:
+    if hotel_name_select == "other":
+        custom_value = (hotel_name_custom or "").strip()
+        return custom_value or None
+    if hotel_name_select in (None, "", "none"):
+        return None
+    return hotel_name_select
+
 
 
 
@@ -107,6 +118,8 @@ def create_employee(
     bank_bic: str = Form(None),
     bank_account_holder: str = Form(None),
     
+    hotel_name_select: str = Form(None),
+    hotel_name_custom: str = Form(None),
     work_city: str = Form(None),
     department: str = Form(None),
     employment_type: str = Form(None),
@@ -172,6 +185,7 @@ def create_employee(
         employment_type=employment_type,
         occupation=occupation,
         position_level=position_level,
+        hotel_name=normalize_hotel_name(hotel_name_select, hotel_name_custom),
         weekly_hours=weekly_hours,
         work_days_per_week=work_days_per_week,
         daily_hours=daily_hours,
@@ -221,7 +235,7 @@ def review_employee(employee_id:int, request: Request, db:Session = Depends(get_
 def edit_employee_page(employee_id:int, request: Request, db:Session= Depends(get_db)):
     employee=db.query(Employee).filter(Employee.id ==employee_id).first()
     if not employee:
-        return HTMLResponse(context= "<h1>Employee not found</h1>", status_code=404)
+        return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
     
     return templates.TemplateResponse(
         "edit_review.html",
@@ -275,6 +289,8 @@ def update_employee(
     bank_bic: str = Form(None),
     bank_account_holder: str = Form(None),
     
+    hotel_name_select: str = Form(None),
+    hotel_name_custom: str = Form(None),
     work_city: str = Form(None),
     department: str = Form(None),
     employment_type: str = Form(None),
@@ -347,6 +363,7 @@ def update_employee(
         "employment_type": employment_type,
         "occupation": occupation,
         "position_level": position_level,
+        "hotel_name": normalize_hotel_name(hotel_name_select, hotel_name_custom),
         "weekly_hours": weekly_hours,
         "work_days_per_week": work_days_per_week,
         "daily_hours": daily_hours,
@@ -372,10 +389,20 @@ def update_employee(
         
         old_value = getattr(employee, field_name)
         
-        # Do not overwrite existing data with empty strings or None
+        # Allow clearing hotel_name when explicit empty value is provided
+        if field_name == "hotel_name" and (new_value is None or new_value == ""):
+            if old_value is not None and old_value != "":
+                changed_fields[field_name] = {
+                    "old": old_value,
+                    "new": None
+                }
+                setattr(employee, field_name, None)
+            continue
+
+        # Do not overwrite existing data with empty strings or None for all other fields
         if new_value is None or new_value == "":
             continue
-        
+
         if old_value != new_value:
             changed_fields[field_name] = {
                 "old": old_value,
@@ -438,7 +465,13 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
     if not employee:
         return {"error": "Employee not found"}
     
+    from datetime import datetime, timezone
     output_path = generate_contract_for_employee(employee)
+
+    # Save contract path and generation time to employee record
+    employee.last_contract_path = str(output_path)  # type: ignore
+    employee.last_contract_generated_at = datetime.now(timezone.utc)  # type: ignore
+
     audit_entry = AuditLog(
         action = "generate_contract",
         employee_id = employee.id,
@@ -448,11 +481,38 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
     db.add(audit_entry)
     db.commit()
     
+    #     return FileResponse(
+    #     path=str(output_path),
+    #     filename=output_path.name,
+    #     media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    # )
+    
+    return RedirectResponse(url=f"/review/{employee_id}", status_code=303)
+
+@app.get("/download-contract/{employee_id}")
+def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
+    
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    
+    if not employee:
+        return {"error": "Employee not found"}
+    
+    if not employee.last_contract_path:
+        return {"error": "No contract generated for this employee yet"}
+    
+    contract_path = Path(employee.last_contract_path)
+    
+    if not contract_path.exists():
+        return {"error": "Contract file not found on server"}
+    
     return FileResponse(
-        path=str(output_path),
-        filename=output_path.name,
+        path=str(contract_path),
+        filename=contract_path.name,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+    
+    
+
 
 
 @app.get("/audit-logs", response_model= List[AuditLogResponse])

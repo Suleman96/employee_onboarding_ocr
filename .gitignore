@@ -34,7 +34,7 @@ logs/
 uploads/
 preprocessed/
 generated_contracts/
-
+output/
 # OCR and intermediate artifacts
 ocr/**
 

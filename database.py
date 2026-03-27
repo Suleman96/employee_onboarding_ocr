@@ -83,6 +83,7 @@ class Employee(Base):
     daily_hours = Column(Float, nullable=True)
     start_date = Column(String, nullable=True)
     contract_type = Column(String, nullable=True, default="temporary")  # temporary / permanent
+    hotel_name = Column(String, nullable=True)
     end_date = Column(String, nullable=True)
     probation_period_months = Column(Integer, nullable=True)
     previous_employer = Column(String, nullable=True)
@@ -94,12 +95,17 @@ class Employee(Base):
     # System Fields
     status = Column(String, nullable=True, default="draft")  # draft, pending, approved, rejected
     ordio_id = Column(String, nullable=True)
+    
+    last_contract_path = Column(String, nullable=True)
+    last_contract_generated_at = Column(DateTime, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(String, nullable=True)
     is_deleted = Column(Boolean, default=False)
     deleted_reason = Column(String, nullable=True)
+    
 
 class AuditLog(Base):
     __tablename__ = "audit_log"

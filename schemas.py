@@ -66,6 +66,7 @@ class EmployeeBase(BaseModel):
     daily_hours: Optional[float] = None
     start_date: Optional[str] = None
     contract_type: Optional[str] = "temporary"
+    hotel_name: Optional[str] = None
     end_date: Optional[str] = None
     probation_period_months: Optional[int] = None
     previous_employer: Optional[str] = None
@@ -77,6 +78,10 @@ class EmployeeBase(BaseModel):
     # System Fields
     status: Optional[str] = "draft"
     ordio_id: Optional[str] = None
+
+    # Contract Generation
+    last_contract_path: Optional[str] = None
+    last_contract_generated_at: Optional[datetime] = None
     
     
     
@@ -89,11 +94,14 @@ class EmployeeUpdate(EmployeeBase):
 class EmployeeResponse(BaseModel):
     id: int
     created_at: datetime
-    updated_at: datetime 
+    updated_at: datetime
     approved_at: Optional[datetime] = None
     approved_by: Optional[str] = None
     is_deleted: bool = False
     deleted_reason: Optional[str] = None
+    hotel_name: Optional[str] = None
+    last_contract_path: Optional[str] = None
+    last_contract_generated_at: Optional[datetime] = None
     # this is for converting the SQLAlchemy model to a Pydantic model. 
     # It allows us to return SQLAlchemy objects directly from our API endpoints 
     # and have them automatically converted to the appropriate Pydantic response model.

@@ -2,446 +2,382 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Employee</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+    <title>Employee Onboarding System</title>
     <style>
-        body {font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(145deg, #f1f5fb 0%, #e1e9f8 100%);color: #2a3b57;}
-        
-        .container { max-width: 940px; width: 92%; margin: 30px auto; background: #ffffff; border-radius: 14px;
-            box-shadow: 0 12px 28px rgba(30, 47, 80, 0.16);padding: 24px 26px 32px;
-            border: 1px solid #d6e1f9;        }
-        h1 {
-            margin: 0 0 20px; font-size: 1.9rem;color: #1f3c88;letter-spacing: 0.02em;}
-        form fieldset {
-            border: 1px solid #d6e1f9; border-radius: 10px;padding: 16px 20px 20px;margin-bottom: 12px; background: #f8fbff;}
-        form legend {font-weight: 700;color: #15418f; padding: 0 8px;}
-        .form-grid {display: grid;gap: 12px;}
-        .form-grid fieldset {padding: 14px 16px;}
-        .form-grid .field {display: flex; flex-direction: column; gap: 4px;}
-        .form-grid .field + .field {margin-top: 0;}
-        .form-grid fieldset {grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); display: grid; row-gap: 8px; column-gap: 14px; }
-        .form-grid .full-width {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --color-primary: #1a3a5c;
+            --color-primary-light: #2d5a8c;
+            --color-primary-accent: #3d7ac2;
+            --color-bg: linear-gradient(135deg, #eceff1 0%, #d4dfe6 100%);
+            --color-card: #f8fafc;
+            --color-text: #2c3e50;
+            --color-text-light: #7f8c8d;
+            --color-border: #bdc3c7;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --font-size-base: clamp(0.9rem, 2vw, 1rem);
+            --font-size-lg: clamp(1.2rem, 3vw, 1.4rem);
+            --font-size-xl: clamp(1.5rem, 4vw, 1.8rem);
+        }
+
+        body {
+            font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: clamp(0.5rem, 2%, 1rem);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: clamp(8px, 2vw, 12px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: white;
+            padding: clamp(0.6rem, 1.5%, 0.9rem) clamp(1rem, 3%, 2rem);
+            border-bottom: 3px solid var(--color-primary-accent);
+        }
+
+        .header h1 {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .content {
+            padding: clamp(0.75rem, 1.5%, 1rem);
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .form-section {
+            margin-bottom: clamp(0.4rem, 1%, 0.6rem);
+            background: var(--color-card);
+            border-left: 4px solid var(--color-primary-accent);
+            padding: clamp(0.5rem, 1%, 0.65rem) clamp(0.65rem, 1%, 0.8rem);
+            border-radius: 6px;
+        }
+
+        .form-section h3 {
+            color: var(--color-primary);
+            font-size: clamp(0.7rem, 1.3vw, 0.85rem);
+            font-weight: 600;
+            margin-bottom: clamp(0.3rem, 0.7%, 0.5rem);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .fields-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: clamp(0.3rem, 1%, 0.5rem);
+            margin-bottom: 0;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.2rem, 0.5%, 0.3rem);
+        }
+
+        .field.full-width {
             grid-column: 1 / -1;
         }
-        .btn-submit {
-            margin-top: 10px;
-            width: 200px;
-            justify-self: center;
-            background: linear-gradient(120deg, #1f3c88, #3a68c2);
-        }
+
         label {
-            font-size: 0.95rem;
-            display: block;
-            margin-bottom: 6px;
-            color: #324462;
+            font-size: clamp(0.65rem, 1.2vw, 0.75rem);
+            font-weight: 600;
+            color: var(--color-text);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-        input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], select {
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            padding: clamp(0.3rem, 0.8%, 0.4rem) clamp(0.4rem, 0.8%, 0.6rem);
+            border: 1px solid var(--color-border);
+            border-radius: 5px;
+            font-size: clamp(0.75rem, 1.3vw, 0.8rem);
+            color: var(--color-text);
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
             width: 100%;
-            max-width: 350px;
-            min-height: 30px;
-            padding: 8px 10px;
-            border: 1px solid #aac2ea;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            color: #1f3a69;
-            background: #fbfdff;
-            margin-bottom: 10px;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
         input:focus, select:focus {
-            border-color: #4b82ff;
-            box-shadow: 0 0 0 2px rgba(75, 130, 255, 0.16);
+            outline: none;
+            border-color: var(--color-primary-accent);
+            box-shadow: 0 0 0 3px rgba(61, 122, 194, 0.1);
         }
+
         button[type="submit"] {
-            width: 100%;
-            max-width: 260px;
-            display: block;
-            margin: 8px auto 0;
-            padding: 11px 16px;
+            background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+            color: white;
+            padding: clamp(0.5rem, 1%, 0.65rem) clamp(1.25rem, 2%, 1.5rem);
             border: none;
-            border-radius: 10px;
-            background-color: #1f3c88;
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 700;
+            border-radius: 6px;
+            font-size: clamp(0.7rem, 1.2vw, 0.8rem);
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.2s ease;
+            margin-top: clamp(0.5rem, 1%, 0.75rem);
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         button[type="submit"]:hover {
-            background-color: #16306d;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 90, 140, 0.3);
         }
-        .note {
-            text-align: center;
-            margin-top: 16px;
-            color: #51698c;
-            font-size: 0.9rem;
+
+        @media (max-width: 1200px) {
+            .fields-row {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
         }
+
         @media (max-width: 768px) {
-            .container { width: 96%; padding: 18px; }
-            h1 { font-size: 1.6rem; }
-            .form-grid fieldset { grid-template-columns: 1fr; }
+            .fields-row {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+
+            .content {
+                padding: clamp(1rem, 3%, 1.5rem);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .fields-row {
+                grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+            }
+
+            .form-section {
+                margin-bottom: clamp(0.75rem, 2%, 1.25rem);
+                padding: clamp(0.75rem, 2%, 1rem);
+            }
+        }
+
+        /* Zoom adjustments */
+        @media (min-width: 1600px) {
+            .fields-row {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Better scroll behavior */
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: var(--color-primary-accent);
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-    <h1>Create New Employee</h1>
+        <div class="header">
+            <h1>Employee Onboarding System</h1>
+        </div>
+        <div class="content">
+            <form action="/employees/new" method="post">
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h3>Personal Information</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>First Name</label><input type="text" name="first_name" required></div>
+                        <div class="field"><label>Last Name</label><input type="text" name="last_name" required></div>
+                        <div class="field"><label>Gender</label><select name="gender"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option></select></div>
+                        <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
+                    </div>
+                </div>
 
-    <form action="/employees/new" method="post" class="form-grid">
+                <!-- Contact & Location -->
+                <div class="form-section">
+                    <h3>Contact & Location</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
+                        <div class="field"><label>Email</label><input type="email" name="email"></div>
+                        <div class="field"><label>Street & House No.</label><input type="text" name="street_and_house_number"></div>
+                        <div class="field"><label>ZIP Code</label><input type="text" name="zip_code"></div>
+                        <div class="field"><label>City</label><input type="text" name="city"></div>
+                        <div class="field"><label>Country</label><input type="text" name="country" value="Deutschland"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Basic Information</strong></legend>
-            <div class="field"><label>First Name</label><input type="text" name="first_name"></div>
-            <div class="field"><label>Last Name</label><input type="text" name="last_name"></div>
-            <div class="field"><label>Gender</label><select name="gender"><option value="">--Choose--</option><option value="male">male</option><option value="female">female</option></select></div>
-            <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
-        </fieldset>
+                <!-- Birth & Origin -->
+                <div class="form-section">
+                    <h3>Birth & Origin</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth"></div>
+                        <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth"></div>
+                        <div class="field"><label>Nationality</label><input type="text" name="nationality" list="nationality-list"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Birth & Origin</strong></legend>
-            <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth"></div>
-            <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth"></div>
-            <div class="field full-width"><label>Nationality</label><input type="text" name="nationality" list="nationality-list"></div>
-        </fieldset>
+                <!-- Identity Documents -->
+                <div class="form-section">
+                    <h3>Identity Documents</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number"></div>
+                        <div class="field"><label>Ausweis Expiry</label><input type="date" name="ausweis_expiry_date"></div>
+                        <div class="field"><label>Reisepass Number</label><input type="text" name="reise_pass_number"></div>
+                        <div class="field"><label>Reisepass Expiry</label><input type="date" name="reise_pass_expiry_date"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Identity Documents</strong></legend>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number"></div>
-                <div class="field"><label>Ausweis Expiry Date</label><input type="date" name="ausweis_expiry_date"></div>
-                <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number"></div>
-                <div class="field"><label>Reise Pass Expiry Date</label><input type="date" name="reise_pass_expiry_date"></div>
-            </div>
-        </fieldset>
+                <!-- Insurance & Tax -->
+                <div class="form-section">
+                    <h3>Insurance & Tax</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>Krankenkasse</label><input type="text" name="krankenkasse"></div>
+                        <div class="field"><label>Krankenkasse Nr.</label><input type="text" name="krankenkasse_nummer"></div>
+                        <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id"></div>
+                        <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6"></div>
+                        <div class="field"><label>Sozialversicherungsnummer</label><input type="text" name="sozialversicherungsnummer"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Contact</strong></legend>
-            <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
-            <div class="field"><label>Email</label><input type="email" name="email"></div>
-        </fieldset>
+                <!-- Banking -->
+                <div class="form-section">
+                    <h3>Banking Information</h3>
+                    <div class="fields-row">
+                        <div class="field"><label>Bank Name</label><input type="text" name="bank_name"></div>
+                        <div class="field"><label>BIC</label><input type="text" name="bank_bic"></div>
+                        <div class="field"><label>Account Holder</label><input type="text" name="bank_account_holder"></div>
+                        <div class="field full-width"><label>IBAN</label><input type="text" name="bank_iban"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Address</strong></legend>
-            <div class="field"><label>Street and House Number</label><input type="text" name="street_and_house_number"></div>
-            <div class="field"><label>ZIP Code</label><input type="text" name="zip_code"></div>
-            <div class="field"><label>City</label><input type="text" name="city"></div>
-            <div class="field full-width"><label>Country of stay</label><input type="text" name="country" value="Deutschland"></div>
-        </fieldset>
+                <!-- Employment Details -->
+                <div class="form-section">
+                    <h3>Employment Details</h3>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label>City of Work</label>
+                            <select id="work_city_select" onchange="handleWorkCityChange(this)">
+                                <option value="">Choose City</option>
+                                <option value="Bergisch Gladbach">Bergisch Gladbach</option>
+                                <option value="Berlin">Berlin</option>
+                                <option value="Düsseldorf">Düsseldorf</option>
+                                <option value="Frankfurt">Frankfurt</option>
+                                <option value="Hamburg">Hamburg</option>
+                                <option value="Köln">Köln</option>
+                                <option value="Wien">Wien</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" name="work_city" id="work_city_input" placeholder="Enter city..." style="display:none; margin-top:4px;">
+                        </div>
+                        <div class="field">
+                            <label>Hotel Name</label>
+                            <select id="hotel_name_select" name="hotel_name_select" onchange="handleHotelNameChange(this)">
+                                <option value="">Choose Hotel</option>
+                                <option value="Adlon Hotel Berlin">Adlon Hotel Berlin</option>
+                                <option value="Grand Hyatt Berlin">Grand Hyatt Berlin</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." style="display:none; margin-top:4px;">
+                        </div>
+                        <div class="field">
+                            <label>Occupation</label>
+                            <select id="occupation_select" onchange="handleOccupationChange(this)">
+                                <option value="">Choose Occupation</option>
+                                <optgroup label="Management">
+                                    <option value="Floor Supervisor">Floor Supervisor</option>
+                                    <option value="HSK Supervisor">HSK Supervisor</option>
+                                    <option value="HSK Manager">HSK Manager</option>
+                                </optgroup>
+                                <optgroup label="Housekeeping">
+                                    <option value="HSK">HSK (Housekeeping)</option>
+                                    <option value="Zimmermädchen">Zimmermädchen</option>
+                                    <option value="Minibar">Minibar</option>
+                                </optgroup>
+                                <optgroup label="Cleaning">
+                                    <option value="Reinigungskraft">Reinigungskraft</option>
+                                    <option value="Glasreiniger">Glasreiniger</option>
+                                    <option value="Public Area">Public Area</option>
+                                </optgroup>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." style="display:none; margin-top:4px;">
+                        </div>
+                        <div class="field"><label>Employment Type</label><select name="employment_type"><option value="">Choose</option><option value="Vollzeit">Vollzeit (Full-time)</option><option value="Teilzeit">Teilzeit (Part-time)</option><option value="Minijob">Minijob</option></select></div>
+                        <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" onchange="autoFillEndDate()"></div>
+                        <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date"></div>
+                        <div class="field"><label>Contract Type</label><select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)"><option value="temporary" selected>Temporary</option><option value="permanent">Permanent</option></select></div>
+                        
+                        <div class="field"><label>Work Schedule Preset</label><select id="schedule_preset" onchange="applySchedulePreset(this)"><option value="">Choose Preset</option><option value="20|5|4">20 hrs / 5 days / 4 hrs/day</option>
+                            <option value="24|3|8">24 hrs / 3 days / 8 hrs/day</option><option value="25|5|5">25 hrs / 5 days / 5 hrs/day</option><option value="30|5|6">30 hrs / 5 days / 6 hrs/day</option><option value="32|4|8">32 hrs / 4 days / 8 hrs/day</option>
+                            <option value="35|5|7">35 hrs / 5 days / 7 hrs/day</option><option value="40|5|8">40 hrs / 5 days / 8 hrs/day</option><option value="other">Custom</option></select></div>
+                        
+                        <div class="field"><label>Weekly Hours</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" placeholder="40" disabled></div>
+                        
+                        <div class="field"><label>Work Days/Week</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" placeholder="5" disabled></div>
+                        <div class="field"><label>Hours/Day</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" placeholder="8" step="0.5" disabled></div>
+                        <div class="field"><label>Status</label><select name="status"><option value="draft" selected>Draft</option><option value="under_review">Under Review</option><option value="approved">Approved</option></select></div>
+                        <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
+                    </div>
+                </div>
 
-        <fieldset>
-            <legend><strong>Health Insurance</strong></legend>
-            <div class="field"><label>Krankenkasse</label><input type="text" name="krankenkasse"></div>
-            <div class="field"><label>Krankenkasse Nummer</label><input type="text" name="krankenkasse_nummer"></div>
-        </fieldset>
+                <button type="submit">Create Employee Record</button>
+            </form>
 
-        <fieldset>
-            <legend><strong>Tax & Financial</strong></legend>
-            <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id"></div>
-            <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6"></div>
-            <div class="field"><label>Sozialversicherungsnummer</label><input type="text" name="sozialversicherungsnummer"></div>
-        </fieldset>
-
-        <fieldset>
-            <legend><strong>Banking</strong></legend>
-            <div class="field"><label>Bank Name</label><input type="text" name="bank_name"></div>
-            <div class="field"><label>BIC</label><input type="text" name="bank_bic"></div>
-            <div class="field"><label>Bank Account Holder</label><input type="text" name="bank_account_holder"></div>
-            <div class="field full-width"><label>IBAN</label><input type="text" name="bank_iban"></div>
-        </fieldset>
-
-        <fieldset>
-            <legend><strong>Employment</strong></legend>
-            <div class="field">
-                <label>City of Work</label>
-                <select id="work_city_select" onchange="handleWorkCityChange(this)">
-                    <option value="">-- Choose City --</option>
-                    <option value="Bergisch Gladbach">Bergisch Gladbach</option>
-                    <option value="Berlin">Berlin</option>
-                    <option value="Düsseldorf">Düsseldorf</option>
-                    <option value="Frankfurt">Frankfurt</option>
-                    <option value="Hamburg">Hamburg</option>
-                    <option value="Köln">Köln</option>
-                    <option value="Wien">Wien</option>
-                    <option value="other">Other (type below)</option>
-                </select>
-                <input type="text" name="work_city" id="work_city_input" placeholder="Type city name..." style="display:none; margin-top:6px;">
-            </div>
-            <div class="field">
-                <label>Occupation</label>
-                <select id="occupation_select" onchange="handleOccupationChange(this)">
-                    <option value="">-- Choose Occupation --</option>
-                    <optgroup label="Management &amp; Supervision">
-                        <option value="Floor Supervisor">Floor Supervisor</option>
-                        <option value="HSK Supervisor">HSK Supervisor</option>
-                        <option value="HSK Manager">HSK Manager</option>
-                        <option value="Ass. HSK Manager">Ass. HSK Manager</option>
-                        <option value="STW Supervisor">STW Supervisor</option>
-                        <option value="STW Manager">STW Manager</option>
-                        <option value="Quality Manager">Quality Manager</option>
-                        <option value="Objektleitung NR">Objektleitung NR</option>
-                    </optgroup>
-                    <optgroup label="Housekeeping (HSK)">
-                        <option value="HSK">HSK (Housekeeping)</option>
-                        <option value="Zimmermädchen">Zimmermädchen</option>
-                        <option value="Minibar">Minibar</option>
-                    </optgroup>
-                    <optgroup label="Reinigung &amp; Cleaning">
-                        <option value="Reinigungskraft">Reinigungskraft</option>
-                        <option value="Glasreiniger">Glasreiniger</option>
-                        <option value="Public Area">Public Area</option>
-                        <option value="NR (Night Runner)">NR (Night Runner)</option>
-                        <option value="STW (Steward)">STW (Steward)</option>
-                    </optgroup>
-                    <optgroup label="Facility">
-                        <option value="Hausmann">Hausmann</option>
-                        <option value="HM / WM">HM / WM (Hausmann / Wäschefrau)</option>
-                    </optgroup>
-                    <option value="other">Other (type below)</option>
-                </select>
-                <input type="text" name="occupation" id="occupation_input" placeholder="Type occupation..." style="display:none; margin-top:6px;">
-            </div>
-            <div class="field">
-                <label>Employment Type</label>
-                <select name="employment_type">
-                    <option value="">-- Choose --</option>
-                    <option value="Vollzeit">Vollzeit (Full-time)</option>
-                    <option value="Teilzeit">Teilzeit (Part-time)</option>
-                    <option value="Minijob">Minijob</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Work Schedule — Quick Select</label>
-                <select id="schedule_preset" onchange="applySchedulePreset(this)">
-                    <option value="">-- Choose Preset --</option>
-                    <option value="40|5|8">40 Std / 5 Tage / 8 Std pro Tag</option>
-                    <option value="35|5|7">35 Std / 5 Tage / 7 Std pro Tag</option>
-                    <option value="32|4|8">32 Std / 4 Tage / 8 Std pro Tag</option>
-                    <option value="30|5|6">30 Std / 5 Tage / 6 Std pro Tag</option>
-                    <option value="25|5|5">25 Std / 5 Tage / 5 Std pro Tag</option>
-                    <option value="24|3|8">24 Std / 3 Tage / 8 Std pro Tag</option>
-                    <option value="20|5|4">20 Std / 5 Tage / 4 Std pro Tag</option>
-                    <option value="other">Other (Enter Custom)</option>
-                </select>
-            </div>
-            <div class="field"><label>Weekly Hours (Std/Woche)</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" placeholder="e.g. 40" onchange="calcDailyHours()" disabled></div>
-            <div class="field"><label>Work Days / Week (Tage/Woche)</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" placeholder="e.g. 5" onchange="calcDailyHours()" disabled></div>
-            <div class="field"><label>Hours per Day (Std/Tag)</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" placeholder="e.g. 8" step="0.5" disabled></div>
-            <div class="field">
-                <label>Contract Duration</label>
-                <select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)" disabled>
-                    <option value="temporary" selected>Temporary</option>
-                    <option value="permanent">Permanent</option>
-                </select>
-            </div>
-            <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" onchange="autoFillEndDate()"></div>
-            <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date"></div>
-            <div class="field"><label>Disabled</label><input type="text" name="disabled" list="disabled-options"></div>
-            <div class="field full-width"><label>Status</label><select name="status"><option value="draft" selected>draft</option><option value="under_review">under_review</option><option value="approved">approved</option></select></div>
-            <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
-        </fieldset>
-
-        <button type="submit" class="btn-submit">Save Employee</button>
-    </form>
-
-    <datalist id="disabled-options">
-        <option value="true">
-        <option value="false">
-    </datalist>
-
-    <datalist id="nationality-list">
-        <option value="Afghan">
-        <option value="Albanian">
-        <option value="Algerian">
-        <option value="American">
-        <option value="Andorran">
-        <option value="Angolan">
-        <option value="Antiguan">
-        <option value="Argentinean">
-        <option value="Armenian">
-        <option value="Australian">
-        <option value="Austrian">
-        <option value="Azerbaijani">
-        <option value="Bahamian">
-        <option value="Bahraini">
-        <option value="Bangladeshi">
-        <option value="Barbadian">
-        <option value="Belarusian">
-        <option value="Belgian">
-        <option value="Belizean">
-        <option value="Beninese">
-        <option value="Bhutanese">
-        <option value="Bolivian">
-        <option value="Bosnian">
-        <option value="Brazilian">
-        <option value="British">
-        <option value="Bruneian">
-        <option value="Bulgarian">
-        <option value="Burkinabe">
-        <option value="Burmese">
-        <option value="Burundian">
-        <option value="Cambodian">
-        <option value="Cameroonian">
-        <option value="Canadian">
-        <option value="Cape Verdean">
-        <option value="Central African">
-        <option value="Chadian">
-        <option value="Chilean">
-        <option value="Chinese">
-        <option value="Colombian">
-        <option value="Comoran">
-        <option value="Congolese">
-        <option value="Costa Rican">
-        <option value="Croatian">
-        <option value="Cuban">
-        <option value="Cypriot">
-        <option value="Czech">
-        <option value="Danish">
-        <option value="Djiboutian">
-        <option value="Dominican">
-        <option value="Dutch">
-        <option value="East Timorese">
-        <option value="Ecuadorean">
-        <option value="Egyptian">
-        <option value="Emirati">
-        <option value="Equatorial Guinean">
-        <option value="Eritrean">
-        <option value="Estonian">
-        <option value="Ethiopian">
-        <option value="Fijian">
-        <option value="Filipino">
-        <option value="Finnish">
-        <option value="French">
-        <option value="Gabonese">
-        <option value="Gambian">
-        <option value="Georgian">
-        <option value="German">
-        <option value="Ghanaian">
-        <option value="Greek">
-        <option value="Grenadian">
-        <option value="Guatemalan">
-        <option value="Guinea-Bissauan">
-        <option value="Guinean">
-        <option value="Guyanese">
-        <option value="Haitian">
-        <option value="Herzegovinian">
-        <option value="Honduran">
-        <option value="Hungarian">
-        <option value="Icelander">
-        <option value="Indian">
-        <option value="Indonesian">
-        <option value="Iranian">
-        <option value="Iraqi">
-        <option value="Irish">
-        <option value="Israeli">
-        <option value="Italian">
-        <option value="Ivorian">
-        <option value="Jamaican">
-        <option value="Japanese">
-        <option value="Jordanian">
-        <option value="Kazakhstani">
-        <option value="Kenyan">
-        <option value="Kittian and Nevisian">
-        <option value="Kuwaiti">
-        <option value="Kyrgyz">
-        <option value="Laotian">
-        <option value="Latvian">
-        <option value="Lebanese">
-        <option value="Liberian">
-        <option value="Libyan">
-        <option value="Liechtensteiner">
-        <option value="Lithuanian">
-        <option value="Luxembourger">
-        <option value="Macedonian">
-        <option value="Malagasy">
-        <option value="Malawian">
-        <option value="Malaysian">
-        <option value="Maldivian">
-        <option value="Malian">
-        <option value="Maltese">
-        <option value="Marshallese">
-        <option value="Mauritanian">
-        <option value="Mauritian">
-        <option value="Mexican">
-        <option value="Micronesian">
-        <option value="Moldovan">
-        <option value="Monacan">
-        <option value="Mongolian">
-        <option value="Moroccan">
-        <option value="Mosotho">
-        <option value="Motswana">
-        <option value="Mozambican">
-        <option value="Namibian">
-        <option value="Nauruan">
-        <option value="Nepalese">
-        <option value="New Zealander">
-        <option value="Nicaraguan">
-        <option value="Nigerien">
-        <option value="North Korean">
-        <option value="Northern Irish">
-        <option value="Norwegian">
-        <option value="Omani">
-        <option value="Pakistani">
-        <option value="Palauan">
-        <option value="Palestinian">
-        <option value="Panamanian">
-        <option value="Papua New Guinean">
-        <option value="Paraguayan">
-        <option value="Peruvian">
-        <option value="Polish">
-        <option value="Portuguese">
-        <option value="Qatari">
-        <option value="Romanian">
-        <option value="Russian">
-        <option value="Rwandan">
-        <option value="Saint Lucian">
-        <option value="Salvadoran">
-        <option value="Samoan">
-        <option value="San Marinese">
-        <option value="Sao Tomean">
-        <option value="Saudi">
-        <option value="Scottish">
-        <option value="Senegalese">
-        <option value="Serbian">
-        <option value="Seychellois">
-        <option value="Sierra Leonean">
-        <option value="Singaporean">
-        <option value="Slovakian">
-        <option value="Slovenian">
-        <option value="Solomon Islander">
-        <option value="Somali">
-        <option value="South African">
-        <option value="South Korean">
-        <option value="Spanish">
-        <option value="Sri Lankan">
-        <option value="Sudanese">
-        <option value="Surinamer">
-        <option value="Swazi">
-        <option value="Swedish">
-        <option value="Swiss">
-        <option value="Syrian">
-        <option value="Taiwanese">
-        <option value="Tajik">
-        <option value="Tanzanian">
-        <option value="Thai">
-        <option value="Togolese">
-        <option value="Tongan">
-        <option value="Trinidadian or Tobagonian">
-        <option value="Tunisian">
-        <option value="Turkish">
-        <option value="Tuvaluan">
-        <option value="Ugandan">
-        <option value="Ukrainian">
-        <option value="Uruguayan">
-        <option value="Uzbekistani">
-        <option value="Venezuelan">
-        <option value="Vietnamese">
-        <option value="Welsh">
-        <option value="Yemenite">
-        <option value="Zambian">
-        <option value="Zimbabwean">
-    </datalist>
+            <datalist id="nationality-list">
+                <option value="Afghan"></option>
+                <option value="Albanian"></option>
+                <option value="Algerian"></option>
+                <option value="American"></option>
+                <option value="Austrian"></option>
+                <option value="Belgian"></option>
+                <option value="British"></option>
+                <option value="Chinese"></option>
+                <option value="Danish"></option>
+                <option value="Dutch"></option>
+                <option value="French"></option>
+                <option value="German"></option>
+                <option value="Greek"></option>
+                <option value="Hungarian"></option>
+                <option value="Indian"></option>
+                <option value="Irish"></option>
+                <option value="Italian"></option>
+                <option value="Japanese"></option>
+                <option value="Korean"></option>
+                <option value="Mexican"></option>
+                <option value="Pakistani"></option>
+                <option value="Polish"></option>
+                <option value="Portuguese"></option>
+                <option value="Russian"></option>
+                <option value="Spanish"></option>
+                <option value="Swedish"></option>
+                <option value="Swiss"></option>
+            </datalist>
+        </div>
+    </div>
     <script>
         function handleWorkCityChange(select) {
             const input = document.getElementById('work_city_input');
@@ -467,12 +403,24 @@
             }
         }
 
+        function handleHotelNameChange(select) {
+            const input = document.getElementById('hotel_name_input');
+            if (select.value === 'other') {
+                input.style.display = 'block';
+                input.value = '';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = '';
+            }
+        }
+
         function applySchedulePreset(select) {
             const weeklyInput = document.getElementById('weekly_hours');
             const daysInput = document.getElementById('work_days_per_week');
             const dailyInput = document.getElementById('daily_hours');
             const contractSelect = document.getElementById('contract_type');
-            
+
             if (select.value === 'other') {
                 // Enable custom fields when "other" is selected
                 weeklyInput.disabled = false;
@@ -509,6 +457,16 @@
                 contractSelect.style.opacity = '0.5';
             }
         }
+
+        // Add event listeners for automatic calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            const weeklyInput = document.getElementById('weekly_hours');
+            const daysInput = document.getElementById('work_days_per_week');
+            weeklyInput.addEventListener('change', calcDailyHours);
+            weeklyInput.addEventListener('input', calcDailyHours);
+            daysInput.addEventListener('change', calcDailyHours);
+            daysInput.addEventListener('input', calcDailyHours);
+        });
 
         function calcDailyHours() {
             const weekly = parseFloat(document.getElementById('weekly_hours').value);

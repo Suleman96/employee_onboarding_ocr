@@ -2,367 +2,425 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Employee Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
+    <title>Employee Record Review</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2b3b4d 0%, #41526a 40%, #5b6f8c 100%);
-            color: #1c1c1c;
-            height: 100vh;
-            overflow: hidden;
-            padding: 8px;
+
+        :root {
+            --color-primary: #1a3a5c;
+            --color-primary-light: #2d5a8c;
+            --color-primary-accent: #3d7ac2;
+            --color-bg: linear-gradient(135deg, #eceff1 0%, #d4dfe6 100%);
+            --color-card: #f8fafc;
+            --color-text: #2c3e50;
+            --color-text-light: #7f8c8d;
+            --color-border: #e8eef5;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --font-size-base: clamp(0.85rem, 2vw, 0.95rem);
+            --font-size-lg: clamp(0.95rem, 2.5vw, 1.1rem);
+            --font-size-xl: clamp(1.4rem, 3.5vw, 1.8rem);
         }
+
+        body {
+            font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+        }
+
         .container {
-            height: 100%;
+            max-width: 100%;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: auto;
+            background: white;
+            border-radius: clamp(8px, 2vw, 12px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
+
         .header {
-            background: linear-gradient(135deg, #1f3c88 0%, #2d5ca8 100%);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
             color: white;
-            padding: 12px 20px;
+            padding: clamp(0.6rem, 1.5%, 0.9rem) clamp(1rem, 3%, 2rem);
+            border-bottom: 3px solid var(--color-primary-accent);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: clamp(0.5rem, 1%, 0.75rem);
         }
+
         .header h1 {
-            font-size: 1.6em;
-            margin: 0;
-        }
-        .employee-id {
-            font-size: 0.9em;
-            opacity: 0.9;
-            background-color: rgba(255, 255, 255, 0.2);
-            padding: 4px 12px;
-            border-radius: 4px;
-        }
-        .content {
-            padding: 15px 20px;
-            overflow-y: auto;
-            flex: 1;
-        }
-        .section {
-            margin-bottom: 12px;
-            background-color: #f8f9fb;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        .section:last-of-type {
-            margin-bottom: 0;
-        }
-        .section h3 {
-            color: #1f3c88;
-            font-size: 1em;
-            margin: 0 0 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .section-icon {
-            font-size: 1.1em;
-        }
-        .field-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .field-row:last-child {
-            margin-bottom: 0;
-        }
-        .field {
-            background-color: white;
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 1px solid #e0e7ff;
-        }
-        .field label {
-            display: block;
-            color: #667eea;
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
             font-weight: 600;
-            font-size: 0.75em;
+            letter-spacing: 0.5px;
+        }
+
+        .header .emp-id {
+            font-size: clamp(0.75rem, 1.3vw, 0.85rem);
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.2);
+            padding: clamp(0.3rem, 0.75%, 0.4rem) clamp(0.5rem, 1%, 0.75rem);
+            border-radius: 5px;
+        }
+
+        .content {
+            padding: clamp(0.75rem, 1.5%, 1rem);
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 22%, 260px), 1fr));
+            gap: clamp(0.5rem, 1%, 0.75rem);
+            max-height: calc(100vh - 120px);
+        }
+
+        .info-card {
+            background: var(--color-card);
+            border-left: 4px solid var(--color-primary-accent);
+            padding: clamp(0.5rem, 1%, 0.65rem) clamp(0.65rem, 1%, 0.8rem);
+            border-radius: 6px;
+        }
+
+        .info-card h3 {
+            color: var(--color-primary);
+            font-size: clamp(0.7rem, 1.3vw, 0.85rem);
+            font-weight: 600;
+            margin-bottom: clamp(0.3rem, 0.7%, 0.5rem);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .info-item {
+            margin-bottom: clamp(0.3rem, 0.6%, 0.5rem);
+            padding-bottom: clamp(0.3rem, 0.6%, 0.5rem);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: clamp(0.6rem, 1.1vw, 0.7rem);
+            font-weight: 600;
+            color: var(--color-text-light);
             text-transform: uppercase;
             letter-spacing: 0.3px;
-            margin-bottom: 3px;
+            margin-bottom: clamp(0.1rem, 0.2%, 0.15rem);
         }
-        .field-value {
-            color: #2d3748;
-            font-size: 0.85em;
-            word-break: break-word;
-            min-height: 18px;
-            display: flex;
-            align-items: center;
+
+        .info-value {
+            font-size: clamp(0.75rem, 1.3vw, 0.8rem);
+            color: var(--color-text);
+            font-weight: 500;
         }
-        .field-value.empty {
-            color: #cbd5e0;
-            font-style: italic;
-        }
-        .actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e0e7ff;
-            flex-wrap: wrap;
-            flex-shrink: 0;
-        }
-        .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.8em;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-            text-align: center;
-            white-space: nowrap;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-        .btn-secondary {
-            background-color: #e0e7ff;
-            color: #1f3c88;
-        }
-        .btn-secondary:hover {
-            background-color: #c7d2ff;
-        }
+
         .status-badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 16px;
-            font-size: 0.75em;
+            padding: clamp(0.25rem, 0.4%, 0.35rem) clamp(0.5rem, 0.8%, 0.7rem);
+            border-radius: 12px;
+            font-size: clamp(0.65rem, 1.2vw, 0.75rem);
             font-weight: 600;
         }
-        .status-draft {
-            background-color: #fed7d7;
-            color: #742a2a;
-        }
+
         .status-approved {
-            background-color: #c6f6d5;
-            color: #22543d;
+            background: #d5f4e6;
+            color: #0b5345;
         }
-        .status-rejected {
-            background-color: #fed7d7;
-            color: #742a2a;
+
+        .status-draft {
+            background: #fadbd8;
+            color: #78281f;
+        }
+
+        .footer {
+            background: var(--color-card);
+            padding: clamp(0.6rem, 1%, 0.8rem) clamp(1rem, 2%, 1.5rem);
+            display: flex;
+            gap: clamp(0.4rem, 0.8%, 0.6rem);
+            flex-wrap: wrap;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .btn {
+            padding: clamp(0.5rem, 0.8%, 0.65rem) clamp(1rem, 1.5%, 1.25rem);
+            border: none;
+            border-radius: 6px;
+            font-size: clamp(0.7rem, 1.2vw, 0.8rem);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 90, 140, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--color-border);
+            color: var(--color-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #c7d2e8;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 45%, 280px), 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 100%, 250px), 1fr));
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                grid-template-columns: 1fr;
+                margin-bottom: clamp(0.5rem, 2%, 1rem);
+            }
+
+            .footer {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .header {
+                padding: clamp(0.75rem, 2%, 1rem) clamp(1rem, 3%, 1.5rem);
+            }
+        }
+
+        /* Scroll styling */
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: var(--color-primary-accent);
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 Employee Review</h1>
-            <div class="employee-id">ID: {{ employee.id }}</div>
+            <h1>📋 Employee Record Review</h1>
+            <div class="emp-id">ID: <strong>{{ employee.id }}</strong></div>
         </div>
 
         <div class="content">
-            <!-- Personal Information Section -->
-            <div class="section">
-                <h3><span class="section-icon">👤</span>Personal Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>First Name</label>
-                        <div class="field-value">{{ employee.first_name or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Last Name</label>
-                        <div class="field-value">{{ employee.last_name or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Gender</label>
-                        <div class="field-value">{{ employee.gender or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Date of Birth</label>
-                        <div class="field-value">{{ employee.date_of_birth or '' }}</div>
-                    </div>
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h3>Personal Information</h3>
+                <div class="info-item">
+                    <div class="info-label">First Name</div>
+                    <div class="info-value">{{ employee.first_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Name</div>
+                    <div class="info-value">{{ employee.last_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Gender</div>
+                    <div class="info-value">{{ employee.gender or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Date of Birth</div>
+                    <div class="info-value">{{ employee.date_of_birth or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Birth & Origin Section -->
-            <div class="section">
-                <h3><span class="section-icon">🌍</span>Birth & Origin Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Place of Birth</label>
-                        <div class="field-value">{{ employee.place_of_birth or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Country of Birth</label>
-                        <div class="field-value">{{ employee.country_of_birth or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Nationality</label>
-                        <div class="field-value">{{ employee.nationality or '' }}</div>
-                    </div>
+            <!-- Contact & Location -->
+            <div class="info-card">
+                <h3>Contact & Location</h3>
+                <div class="info-item">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">{{ employee.phone or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value">{{ employee.email or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Street & House No.</div>
+                    <div class="info-value">{{ employee.street_and_house_number or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">City</div>
+                    <div class="info-value">{{ employee.city or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">ZIP Code</div>
+                    <div class="info-value">{{ employee.zip_code or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Country</div>
+                    <div class="info-value">{{ employee.country or 'Deutschland' }}</div>
                 </div>
             </div>
 
-            <!-- Identity Documents Section -->
-            <div class="section">
-                <h3><span class="section-icon">🪪</span>Identity Documents</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Ausweis Number</label>
-                        <div class="field-value">{{ employee.ausweis_number or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Ausweis Expiry Date</label>
-                        <div class="field-value">{{ employee.ausweis_expiry_date or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Reisepass Number</label>
-                        <div class="field-value">{{ employee.reise_pass_number or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Reisepass Expiry Date</label>
-                        <div class="field-value">{{ employee.reise_pass_expiry_date or '' }}</div>
-                    </div>
+            <!-- Birth & Origin -->
+            <div class="info-card">
+                <h3>Birth & Origin</h3>
+                <div class="info-item">
+                    <div class="info-label">Place of Birth</div>
+                    <div class="info-value">{{ employee.place_of_birth or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Country of Birth</div>
+                    <div class="info-value">{{ employee.country_of_birth or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Nationality</div>
+                    <div class="info-value">{{ employee.nationality or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Contact Information Section -->
-            <div class="section">
-                <h3><span class="section-icon">📞</span>Contact Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Phone</label>
-                        <div class="field-value">{{ employee.phone or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Email</label>
-                        <div class="field-value">{{ employee.email or '' }}</div>
-                    </div>
+            <!-- Identity Documents -->
+            <div class="info-card">
+                <h3>Identity Documents</h3>
+                <div class="info-item">
+                    <div class="info-label">Ausweis Number</div>
+                    <div class="info-value">{{ employee.ausweis_number or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ausweis Expiry</div>
+                    <div class="info-value">{{ employee.ausweis_expiry_date or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Reisepass Number</div>
+                    <div class="info-value">{{ employee.reise_pass_number or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Reisepass Expiry</div>
+                    <div class="info-value">{{ employee.reise_pass_expiry_date or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Address Section -->
-            <div class="section">
-                <h3><span class="section-icon">🏠</span>Address Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Street & House Number</label>
-                        <div class="field-value">{{ employee.street_and_house_number or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>ZIP Code</label>
-                        <div class="field-value">{{ employee.zip_code or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>City</label>
-                        <div class="field-value">{{ employee.city or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Country</label>
-                        <div class="field-value">{{ employee.country or 'Deutschland' }}</div>
-                    </div>
+            <!-- Insurance & Tax -->
+            <div class="info-card">
+                <h3>Insurance & Tax</h3>
+                <div class="info-item">
+                    <div class="info-label">Krankenkasse</div>
+                    <div class="info-value">{{ employee.krankenkasse or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Krankenkasse Nr.</div>
+                    <div class="info-value">{{ employee.krankenkasse_nummer or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Steuer ID</div>
+                    <div class="info-value">{{ employee.steuer_id or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Steuerklasse</div>
+                    <div class="info-value">{{ employee.steuerklasse or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Sozialversicherungsnummer</div>
+                    <div class="info-value">{{ employee.sozialversicherungsnummer or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Health Insurance Section -->
-            <div class="section">
-                <h3><span class="section-icon">🏥</span>Health Insurance</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Krankenkasse</label>
-                        <div class="field-value">{{ employee.krankenkasse or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Krankenkasse Number</label>
-                        <div class="field-value">{{ employee.krankenkasse_nummer or '' }}</div>
-                    </div>
+            <!-- Banking -->
+            <div class="info-card">
+                <h3>Banking Information</h3>
+                <div class="info-item">
+                    <div class="info-label">Bank Name</div>
+                    <div class="info-value">{{ employee.bank_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">BIC</div>
+                    <div class="info-value">{{ employee.bank_bic or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Account Holder</div>
+                    <div class="info-value">{{ employee.bank_account_holder or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">IBAN</div>
+                    <div class="info-value">{{ employee.bank_iban or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Tax & Social Security Section -->
-            <div class="section">
-                <h3><span class="section-icon">📊</span>Tax & Social Security</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Steuer ID</label>
-                        <div class="field-value">{{ employee.steuer_id or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Steuerklasse</label>
-                        <div class="field-value">{{ employee.steuerklasse or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Sozialversicherungsnummer</label>
-                        <div class="field-value">{{ employee.sozialversicherungsnummer or '' }}</div>
-                    </div>
+            <!-- Employment Details -->
+            <div class="info-card">
+                <h3>Employment Details</h3>
+                <div class="info-item">
+                    <div class="info-label">City of Work</div>
+                    <div class="info-value">{{ employee.work_city or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Hotel Name</div>
+                    <div class="info-value">{{ employee.hotel_name or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Occupation</div>
+                    <div class="info-value">{{ employee.occupation or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Employment Type</div>
+                    <div class="info-value">{{ employee.employment_type or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Start Date</div>
+                    <div class="info-value">{{ employee.start_date or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">End Date</div>
+                    <div class="info-value">{{ employee.end_date or 'Ongoing' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Contract Type</div>
+                    <div class="info-value">{{ employee.contract_type or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Weekly Hours</div>
+                    <div class="info-value">{{ employee.weekly_hours or '—' }}</div>
                 </div>
             </div>
 
-            <!-- Bank Information Section -->
-            <div class="section">
-                <h3><span class="section-icon">🏦</span>Bank Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Bank Name</label>
-                        <div class="field-value">{{ employee.bank_name or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>IBAN</label>
-                        <div class="field-value">{{ employee.bank_iban or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>BIC</label>
-                        <div class="field-value">{{ employee.bank_bic or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Account Holder</label>
-                        <div class="field-value">{{ employee.bank_account_holder or '' }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Employment Details Section -->
-            <div class="section">
-                <h3><span class="section-icon">💼</span>Employment Details</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Start Date</label>
-                        <div class="field-value">{{ employee.start_date or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>End Date</label>
-                        <div class="field-value">{{ employee.end_date or 'Ongoing' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Contract Type</label>
-                        <div class="field-value">{{ employee.contract_type or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Disabled</label>
-                        <div class="field-value">{{ employee.disabled or 'No' }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Information Section -->
-            <div class="section">
-                <h3><span class="section-icon">⚙️</span>System Information</h3>
-                <div class="field-row">
-                    <div class="field">
-                        <label>Status</label>
-                        <div class="field-value">
+            <!-- System Information -->
+            <div class="info-card">
+                <h3>System Information</h3>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">
                         {% if employee.status == 'approved' %}
                             <span class="status-badge status-approved">✓ Approved</span>
                         {% elif employee.status == 'draft' %}
@@ -370,48 +428,48 @@
                         {% elif employee.status == 'rejected' %}
                             <span class="status-badge status-rejected">✗ Rejected</span>
                         {% else %}
-                            {{ employee.status or 'Draft' }}
+                            {{ employee.status or '—' }}
                         {% endif %}
-                        </div>
                     </div>
-                    <div class="field">
-                        <label>Ordio ID</label>
-                        <div class="field-value">{{ employee.ordio_id or '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Created At</label>
-                        <div class="field-value">{{ employee.created_at.strftime('%Y-%m-%d %H:%M') if employee.created_at else '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Updated At</label>
-                        <div class="field-value">{{ employee.updated_at.strftime('%Y-%m-%d %H:%M') if employee.updated_at else '' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Approved At</label>
-                        <div class="field-value">{{ employee.approved_at.strftime('%Y-%m-%d %H:%M') if employee.approved_at else 'Not approved' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Approved By</label>
-                        <div class="field-value">{{ employee.approved_by or 'Not approved' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Is Deleted</label>
-                        <div class="field-value">{{ 'Yes' if employee.is_deleted else 'No' }}</div>
-                    </div>
-                    <div class="field">
-                        <label>Deleted Reason</label>
-                        <div class="field-value">{{ employee.deleted_reason or 'Not applicable' }}</div>
-                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Ordio ID</div>
+                    <div class="info-value">{{ employee.ordio_id or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created At</div>
+                    <div class="info-value">{{ employee.created_at.strftime('%Y-%m-%d %H:%M') if employee.created_at else '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Updated At</div>
+                    <div class="info-value">{{ employee.updated_at.strftime('%Y-%m-%d %H:%M') if employee.updated_at else '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Approved By</div>
+                    <div class="info-value">{{ employee.approved_by or 'Not approved' }}</div>
                 </div>
             </div>
 
-            <!-- Actions Section -->
-            <div class="actions">
-                <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
-                <a href= "/generate-contract/{{employee.id}}" class= btn btn-primary">📄 Generate Contract</a>
-                <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
-                <a href="/upload" class="btn btn-secondary">➕ Create New Employee</a>
+            <!-- Contract Information -->
+            <div class="info-card">
+                <h3>Contract Information</h3>
+                <div class="info-item">
+                    <div class="info-label">Last Contract Path</div>
+                    <div class="info-value">{{ employee.last_contract_path or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Generated</div>
+                    <div class="info-value">{{ employee.last_contract_generated_at.strftime('%Y-%m-%d %H:%M') if employee.last_contract_generated_at else 'Not generated' }}</div>
+                </div>
             </div>
+        </div>
+
+        <div class="footer">
+            <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
+            <a href="/generate-contract/{{employee.id}}" class="btn btn-primary">📄 Generate Contract</a>
+            <a href="/download-contract/{{ employee.id }}" class="btn btn-secondary">Download Last Contract</a>
+            <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+            <a href="/upload" class="btn btn-secondary">➕ Create New Employee</a>
         </div>
     </div>
 </body>
