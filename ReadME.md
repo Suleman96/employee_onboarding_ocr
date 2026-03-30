@@ -1,6 +1,6 @@
-# Employee Onboarding System
+# AI Automated Employee Onboarding System
 
-A backend-driven employee onboarding platform for document intake, data extraction, validation, and workflow preparation.
+An AI-driven employee onboarding platform for document intake, data extraction, validation, and workflow preparation.
 
 ## Overview
 
@@ -61,35 +61,40 @@ The onboarding flow is planned to look like this:
 This project is being built with a practical stack that is highly relevant for modern backend, automation, and AI-enabled business applications.
 
 ### Backend
+
 - **Python 3.13**
 - **FastAPI**
 - **Uvicorn**
 - **Pydantic**
 
 ### Database
+
 - **SQLite** for local development
 - **SQLAlchemy** for ORM and database models
 
 ### Document processing
+
 - **python-docx** for Word document handling
 - **docxtpl** for future template-based contract generation
 - **PDF/text extraction tools** for document reading
 - **OCR pipeline** for scanned or image-based files
 
 ### Frontend
+
 - **Jinja2 templates**
 - **HTML**
 - **CSS**
 - **JavaScript**
 
 ### AI / automation direction
+
 - **LLM-assisted information extraction**
 - **document routing based on input type**
 - **structured data validation and review workflows**
 
 ## Project structure
-A simple project structure at this stage may look like this:
 
+A simple project structure at this stage may look like this:
 
 ```text
 employee_onboarding/
@@ -102,3 +107,4 @@ employee_onboarding/
 ├── static/
 ├── data/
 └── README.md
+```

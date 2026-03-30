@@ -50,6 +50,30 @@ def normalize_hotel_name(hotel_name_select: str | None, hotel_name_custom: str |
 
 
 
+# This helper checks whether the employee is missing important fields.
+def get_approval_missing_fields(employee) -> List[str]:
+    
+    missing = []
+    if not employee.first_name:
+        missing.append("first_name")
+    if not employee.last_name:
+        missing.append("last_name")
+    if not employee.date_of_birth:
+        missing.append("date_of_birth")
+    # if not employee.place_of_birth:
+    #     missing.append("place_of_birth")
+    if not employee.street_and_house_number:
+        missing.append("street_and_house_number")
+    if not employee.city:
+        missing.append("city")
+    # if not employee.steuer_id:
+    #     missing.append("steuer_id")
+    # if not employee.bank_iban:
+    #     missing.append("bank_iban")
+    if not employee.start_date:
+        missing.append("start_date")
+
+    return missing
 
 # Home route 
 # This route serves the home page of the application. 
@@ -222,10 +246,17 @@ def review_employee(employee_id:int, request: Request, db:Session = Depends(get_
     if not employee:
         return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
     
+    approval_error = request.query_params.get("approval_error")
+    approval_success = request.query_params.get("approval_success")
+    
     return templates.TemplateResponse(
         request=request,
         name="review.html",
-        context={"employee": employee}
+        context={
+            "employee": employee,
+            "approval_error": approval_error,
+            "approval_success": approval_success,
+        }
     )
 
 @app.get("/review/{employee_id}/edit", response_class=HTMLResponse)
@@ -395,8 +426,8 @@ def update_employee(
             continue
 
         # Do not overwrite existing data with empty strings or None for all other fields
-        if new_value is None or new_value == "":
-            continue
+        #if new_value is None or new_value == "":
+        #    continue
 
         if old_value != new_value:
             changed_fields[field_name] = {
@@ -405,31 +436,10 @@ def update_employee(
             }
             setattr(employee, field_name, new_value) #This writes the new value into the employee object dynamically.
             
-            
-    # This is the old way of updating each field manually, which is more verbose and error-prone.
-    # # Update the employee's information
-    # employee.first_name = first_name
-    # employee.last_name = last_name
-    # employee.gender = gender
-    # employee.date_of_birth = date_of_birth
-    # employee.place_of_birth = place_of_birth
-    # employee.country_of_birth = country_of_birth
-    # employee.nationality = nationality
-    # employee.street_and_house_number = street_and_house_number
-    # employee.phone = phone
-    # employee.zip_code = zip_code
-    # employee.city = city
-    # employee.email = email
-    # employee.country = country
-    # employee.steuer_id = steuer_id
-    # employee.steuerklasse = steuerklasse
-    # employee.iban = iban
-    # employee.start_date = start_date
-    # employee.contract_type = contract_type
-    # employee.end_date = end_date
-    # employee.disabled = disabled
-    # employee.status = status
-    # employee.ordio_id = ordio_id
+    if changed_fields and "status" not in changed_fields and employee.status != "under_review":
+        old_status = employee.status
+        employee.status = "under_review"
+        changed_fields["status"] = {"old": old_status, "new": "under_review"}
 
     db.commit()
     db.refresh(employee)
@@ -499,8 +509,26 @@ def approve_employee(employee_id: int, db: Session = Depends(get_db)):
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         return {"error": "Employee not found"}
+    
     if employee.status == "approved":
         return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
+    
+    missing_fields = get_approval_missing_fields(employee)
+    
+    if missing_fields:
+        audit_entry = AuditLog(
+            action="approval_failed",
+            employee_id=employee.id,
+            details=json.dumps({"reason": "missing_fields", "fields": missing_fields}),
+            performed_by="system"
+        )
+        db.add(audit_entry)
+        db.commit()
+        missing_text = ", ".join(missing_fields)
+        return RedirectResponse(
+            url=f"/review/{employee.id}?approval_error=Missing required fields: {missing_text}",
+            status_code=303,
+        )
 
     employee.status = "approved"
     employee.approved_at = datetime.now(timezone.utc)
@@ -515,7 +543,7 @@ def approve_employee(employee_id: int, db: Session = Depends(get_db)):
     db.add(audit_entry)
     db.commit()
 
-    return RedirectResponse(url=f"/review/{employee_id}", status_code=303)
+    return RedirectResponse(url=f"/review/{employee_id}?approval_success=1", status_code=303)
 
 @app.get("/mark-under-review/{employee_id}")
 def mark_under_review(employee_id: int, db: Session = Depends(get_db)):
@@ -588,9 +616,19 @@ def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
 
 
 
-@app.get("/audit-logs", response_model= List[AuditLogResponse])
-def list_audit_logs(db: Session = Depends(get_db)):
+@app.get("/api/audit-logs", response_model=List[AuditLogResponse])
+def list_audit_logs_api(db: Session = Depends(get_db)):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
     return logs
+
+
+@app.get("/audit-logs", response_class=HTMLResponse)
+def audit_logs_page(request: Request, db: Session = Depends(get_db)):
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="audit-logs.html",
+        context={"request": request, "logs": logs},
+    )
 
 
