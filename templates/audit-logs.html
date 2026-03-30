@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: #f4f6fa;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        .header a {
+            color: #1a3a5c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .header a:hover {
+            text-decoration: underline;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+            padding: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #eef2ff;
+            color: #1f2937;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            font-size: 0.82rem;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            background: #e0f2fe;
+            color: #0369a1;
+            border-radius: 9999px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .empty {
+            padding: 2rem;
+            text-align: center;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Audit Logs</h1>
+            <a href="/">← Back to Dashboard</a>
+        </div>
+
+        <div class="table-wrapper">
+            {% if logs %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Action</th>
+                            <th>Employee ID</th>
+                            <th>Performed By</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '—' }}</td>
+                            <td>{{ log.action or '—' }}</td>
+                            <td>{{ log.employee_id or '—' }}</td>
+                            <td>{{ log.performed_by or '—' }}</td>
+                            <td>{{ log.details or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty">No audit logs were found.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

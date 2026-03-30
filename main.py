@@ -62,10 +62,9 @@ def home(request: Request, db:Session=Depends(get_db)):
     employees = db.query(Employee).order_by(Employee.created_at.desc()).all()
     
     return templates.TemplateResponse(
-        "index.html", {
-            "request": request,
-            "employees": employees 
-            }
+        request=request,
+        name="index.html",
+        context={"employees": employees}
         )
 
 
@@ -75,7 +74,7 @@ def health_check():
 
 @app.get("/upload", response_class=HTMLResponse)
 def upload_page(request: Request):
-    return templates.TemplateResponse("upload.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="upload.html")
 
 
 @app.post("/employees/new")
@@ -224,12 +223,9 @@ def review_employee(employee_id:int, request: Request, db:Session = Depends(get_
         return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
     
     return templates.TemplateResponse(
-        "review.html",# This is the name of the template file in the templates/ directory
-            {
-            "request": request,
-            "employee": employee
-            }
-            
+        request=request,
+        name="review.html",
+        context={"employee": employee}
     )
 
 @app.get("/review/{employee_id}/edit", response_class=HTMLResponse)
@@ -239,11 +235,9 @@ def edit_employee_page(employee_id:int, request: Request, db:Session= Depends(ge
         return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
     
     return templates.TemplateResponse(
-        "edit_review.html",
-        {
-            "request": request,
-            "employee": employee
-        }
+        request=request,
+        name="edit_review.html",
+        context={"employee": employee}
     )
 @app.post("/review/{employee_id}")
 def update_employee(
@@ -499,6 +493,76 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
     # )
     
     return RedirectResponse(url=f"/review/{employee_id}", status_code=303)
+
+@app.get("/approve-employee/{employee_id}")
+def approve_employee(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
+        return {"error": "Employee not found"}
+    if employee.status == "approved":
+        return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
+
+    employee.status = "approved"
+    employee.approved_at = datetime.now(timezone.utc)
+    employee.approved_by = "system"
+
+    audit_entry = AuditLog(
+        action="approve",
+        employee_id=employee.id,
+        details=json.dumps({"status": "approved"}),
+        performed_by="system"
+    )
+    db.add(audit_entry)
+    db.commit()
+
+    return RedirectResponse(url=f"/review/{employee_id}", status_code=303)
+
+@app.get("/mark-under-review/{employee_id}")
+def mark_under_review(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+
+    if not employee:
+        return {"error": "Employee not found"}
+    
+    if employee.status == "under_review":
+        return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
+
+    employee.status = "under_review"
+
+    audit_entry = AuditLog(
+        action="mark_under_review",
+        employee_id=employee.id,
+        details=json.dumps({"status": "under_review"}),
+        performed_by="system"
+    )
+
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(employee)
+
+    return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
+
+@app.get("/reject-employee/{employee_id}")
+def reject_employee(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+
+    if not employee:
+        return {"error": "Employee not found"}
+
+    employee.status = "rejected"
+
+    audit_entry = AuditLog(
+        action="reject",
+        employee_id=employee.id,
+        details=json.dumps({"status": "rejected"}),
+        performed_by="system"
+    )
+
+    db.add(audit_entry)
+    db.commit()
+    db.refresh(employee)
+
+    return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
 
 @app.get("/download-contract/{employee_id}")
 def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
