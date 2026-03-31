@@ -318,11 +318,15 @@
                             <label>Hotel Name</label>
                             <select id="hotel_name_select" name="hotel_name_select" onchange="handleHotelNameChange(this)">
                                 <option value="">Choose Hotel</option>
-                                <option value="Adlon Hotel Berlin" {% if employee.hotel_name == "Adlon Hotel Berlin" %}selected{% endif %}>Adlon Hotel Berlin</option>
-                                <option value="Grand Hyatt Berlin" {% if employee.hotel_name == "Grand Hyatt Berlin" %}selected{% endif %}>Grand Hyatt Berlin</option>
-                                <option value="other" {% if employee.hotel_name and employee.hotel_name not in ["Adlon Hotel Berlin", "Grand Hyatt Berlin"] %}selected{% endif %}>Other</option>
+                                <option value="Hotel Adlon Kempinski">Adlon Hotel Berlin</option>
+                                <option value="Grand Hyatt Berlin">Grand Hyatt Berlin</option>
+                                <option value="China Club Berlin">China Club Berlin</option>
+                                <option value="Kontor Haus">Kontor Haus</option>
+                                <option value="Linden Palais">Linden Palais</option>
+                                <option value="Pressehaus Podium">Pressehaus Podium</option>
+                                <option value="other" {% if employee.hotel_name and employee.hotel_name not in ["Adlon Hotel Berlin", "Grand Hyatt Berlin", "China Club Berlin", "Kontor Haus", "Linden Palais", "Pressehaus Podium"] %}selected{% endif %}>Other</option>
                             </select>
-                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." value="{{ employee.hotel_name if employee.hotel_name not in ['Adlon Hotel Berlin', 'Grand Hyatt Berlin'] else '' }}" style="display:none; margin-top:4px;">
+                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." value="{{ employee.hotel_name if employee.hotel_name not in ['Adlon Hotel Berlin', 'Grand Hyatt Berlin', 'China Club Berlin', 'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'] else '' }}" style="display:none; margin-top:4px;">
                         </div>
                         <div class="field">
                             <label>Occupation</label>
@@ -421,10 +425,12 @@
 
         function handleHotelNameChange(select) {
             const input = document.getElementById('hotel_name_input');
+            if (!input) return;
             if (select.value === 'other') {
                 input.style.display = 'block';
-                input.value = '';
-                input.focus();
+                if (!input.value) {
+                    input.focus();
+                }
             } else {
                 input.style.display = 'none';
                 input.value = '';

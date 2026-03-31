@@ -302,11 +302,15 @@
                             <label>Hotel Name</label>
                             <select id="hotel_name_select" name="hotel_name_select" onchange="handleHotelNameChange(this)">
                                 <option value="">Choose Hotel</option>
-                                <option value="Adlon Hotel Berlin">Adlon Hotel Berlin</option>
+                                <option value="Hotel Adlon Kempinski">Adlon Hotel Berlin</option>
                                 <option value="Grand Hyatt Berlin">Grand Hyatt Berlin</option>
+                                <option value="China Club Berlin">China Club Berlin</option>
+                                <option value="Kontor Haus">Kontor Haus</option>
+                                <option value="Linden Palais">Linden Palais</option>
+                                <option value="Pressehaus Podium">Pressehaus Podium</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." style="display:none; margin-top:4px;">
+                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." autocomplete="off" style="display:none; margin-top:4px;">
                         </div>
                         <div class="field">
                             <label>Occupation</label>
@@ -410,10 +414,12 @@
 
         function handleHotelNameChange(select) {
             const input = document.getElementById('hotel_name_input');
+            if (!input) return;
             if (select.value === 'other') {
                 input.style.display = 'block';
-                input.value = '';
-                input.focus();
+                if (!input.value) {
+                    input.focus();
+                }
             } else {
                 input.style.display = 'none';
                 input.value = '';
@@ -463,19 +469,36 @@
             }
         }
 
-        // Add event listeners for automatic calculation
+        // Add event listeners for automatic calculation and initialize custom fields
         document.addEventListener('DOMContentLoaded', function() {
             const weeklyInput = document.getElementById('weekly_hours');
             const daysInput = document.getElementById('work_days_per_week');
-            weeklyInput.addEventListener('change', calcDailyHours);
-            weeklyInput.addEventListener('input', calcDailyHours);
-            daysInput.addEventListener('change', calcDailyHours);
-            daysInput.addEventListener('input', calcDailyHours);
+            const hotelSelect = document.getElementById('hotel_name_select');
+            const workCitySelect = document.getElementById('work_city_select');
+            const occupationSelect = document.getElementById('occupation_select');
+
+            if (weeklyInput) {
+                weeklyInput.addEventListener('change', calcDailyHours);
+                weeklyInput.addEventListener('input', calcDailyHours);
+            }
+            if (daysInput) {
+                daysInput.addEventListener('change', calcDailyHours);
+                daysInput.addEventListener('input', calcDailyHours);
+            }
+            if (hotelSelect) {
+                handleHotelNameChange(hotelSelect);
+            }
+            if (workCitySelect) {
+                handleWorkCityChange(workCitySelect);
+            }
+            if (occupationSelect) {
+                handleOccupationChange(occupationSelect);
+            }
         });
 
         function calcDailyHours() {
             const weekly = parseFloat(document.getElementById('weekly_hours').value);
-            const days   = parseFloat(document.getElementById('work_days_per_week').value);
+            const days = parseFloat(document.getElementById('work_days_per_week').value);
             if (weekly > 0 && days > 0) {
                 const daily = weekly / days;
                 document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);

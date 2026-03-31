@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from database import create_tables, get_db, Employee, AuditLog
 from contracts.generator import convert_docx_to_pdf, generate_contract_for_employee
@@ -273,6 +274,7 @@ def edit_employee_page(employee_id:int, request: Request, db:Session= Depends(ge
 @app.post("/review/{employee_id}")
 def update_employee(
     employee_id:int,
+    request: Request,
     first_name: str = Form(None),
     middle_name: str = Form(None),
     last_name: str = Form(None),
@@ -441,8 +443,31 @@ def update_employee(
         employee.status = "under_review"
         changed_fields["status"] = {"old": old_status, "new": "under_review"}
 
-    db.commit()
-    db.refresh(employee)
+    if email:
+        email_conflict = db.query(Employee).filter(Employee.email == email, Employee.id != employee_id).first()
+        if email_conflict:
+            return templates.TemplateResponse(
+                request=request,
+                name="edit_review.html",
+                context={
+                    "employee": employee,
+                    "error_message": "That email address is already assigned to another employee. Please use a unique email.",
+                },
+            )
+
+    try:
+        db.commit()
+        db.refresh(employee)
+    except IntegrityError:
+        db.rollback()
+        return templates.TemplateResponse(
+            request=request,
+            name="edit_review.html",
+            context={
+                "employee": employee,
+                "error_message": "An error occurred while saving the employee. Please verify the email and try again.",
+            },
+        )
     
     audit_entry =AuditLog(
         action="update",
@@ -471,10 +496,16 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
         return {"error": "Employee not found"}
     
     # Step 1: Generate the DOCX contract
-    output_path = generate_contract_for_employee(employee)
+    try:
+        output_path = generate_contract_for_employee(
+            employee,
+            template_name="berlin_template.docx",
+        )
+    except FileNotFoundError as exc:
+        return {"error": str(exc)}
     
     # Step:  Convert DOCX to PDF
-    pdf_path = convert_docx_to_pdf(output_path)  # You would need to implement this function using a library like python-docx or an external tool
+    pdf_path = convert_docx_to_pdf(output_path)
     
     
     # Step 3: Save contract path and generation time to employee record

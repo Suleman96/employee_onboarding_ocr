@@ -151,9 +151,24 @@
             background: var(--color-card);
             padding: clamp(0.6rem, 1%, 0.8rem) clamp(1rem, 2%, 1.5rem);
             display: flex;
-            gap: clamp(0.4rem, 0.8%, 0.6rem);
+            gap: clamp(0.75rem, 1.5%, 1rem);
             flex-wrap: wrap;
             border-top: 1px solid var(--color-border);
+        }
+
+        .footer-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: clamp(0.4rem, 0.8%, 0.6rem);
+            align-items: center;
+        }
+
+        .footer-group-title {
+            font-size: clamp(0.75rem, 1.1vw, 0.85rem);
+            color: var(--color-text-light);
+            font-weight: 700;
+            margin-right: 0.6rem;
+            white-space: nowrap;
         }
 
         .btn {
@@ -483,15 +498,30 @@
         </div>
 
         <div class="footer">
-            <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
-            <a href="/generate-contract/{{employee.id}}" class="btn btn-primary">📄 Generate Contract</a>
-            <a href="/download-contract/{{ employee.id }}" class="btn btn-secondary">Download Last Contract</a>
-            <a href= "download-contract-pdf/{{ employee.id}}" class="btn btn-secondary"> Download Last PDF </a>
-            <a href="/approve-employee/{{ employee.id }}" class="btn btn-primary">Approve Employee</a>
-            <a href="/mark-under-review/{{ employee.id }}" class="btn btn-secondary">Mark Under Review</a>
-            <a href="/reject-employee/{{ employee.id }}" class="btn btn-secondary">Reject Employee</a>
-            <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
-            <a href="/upload" class="btn btn-secondary">➕ Create New Employee</a>
+            <div class="footer-group">
+                <span class="footer-group-title">Record Actions</span>
+                <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
+                <a href="/generate-contract/{{employee.id}}" class="btn btn-primary">📄 Generate Contract</a>
+            </div>
+
+            <div class="footer-group">
+                <span class="footer-group-title">Downloads</span>
+                <a href="/download-contract/{{ employee.id }}" class="btn btn-secondary">Download Last Contract</a>
+                <a href="/download-contract-pdf/{{ employee.id}}" class="btn btn-secondary">Download Last PDF</a>
+            </div>
+
+            <div class="footer-group">
+                <span class="footer-group-title">Status</span>
+                <a href="/approve-employee/{{ employee.id }}" class="btn btn-primary">Approve Employee</a>
+                <a href="/mark-under-review/{{ employee.id }}" class="btn btn-secondary">Mark Under Review</a>
+                <a href="/reject-employee/{{ employee.id }}" class="btn btn-secondary">Reject Employee</a>
+            </div>
+
+            <div class="footer-group">
+                <span class="footer-group-title">Navigation</span>
+                <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+                <a href="/upload" class="btn btn-secondary">➕ Create New Employee</a>
+            </div>
         </div>
     </div>
 </body>

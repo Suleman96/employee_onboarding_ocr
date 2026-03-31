@@ -10,6 +10,7 @@
         .top-bar{display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;}
         .btn { background-color: #1f3c88; color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; }
         .btn:hover {background-color: #16306d;}
+        .audit-btn { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); box-shadow: 0 5px 14px rgba(0,0,0,0.18); }
         .stats {margin-bottom: 20px; padding: 15px; background: white;border-radius: 8px;box-shadow: 0 1px 4px rgba(0,0,0,0.08);}
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08);}
         th, td {padding: 12px; border-bottom: 1px solid #ddd;text-align: left;}
@@ -29,6 +30,7 @@
     <div class="top-bar"> 
         <h1>Employee Onboarding Dashboard</h1>
         <a href="/upload" class="btn">Create New Employee</a>
+
     </div>
     <div class="stats">
         <strong>Total Employees:</strong> {{ employees|length }}
@@ -65,6 +67,7 @@
                 </td>
             </tr>
             {% endfor %}
+
         </tbody>
     </table>
     {% else %}
@@ -72,6 +75,7 @@
         No employees found. Click <strong>"Create New Employee"</strong> to add your first employee.
     </div>
     {% endif %}
-    </body>
-</html>
+    <a href="/audit-logs" class="btn audit-btn">Audit Logs</a>
 
+</body>
+</html>
