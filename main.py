@@ -491,16 +491,15 @@ def list_employees(db: Session = Depends(get_db)):
 
 @app.get("/generate-contract/{employee_id}")
 def generate_contract(employee_id: int, db: Session = Depends(get_db)):
+    
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         return {"error": "Employee not found"}
     
     # Step 1: Generate the DOCX contract
     try:
-        output_path = generate_contract_for_employee(
-            employee,
-            template_name="berlin_template.docx",
-        )
+        output_path = generate_contract_for_employee(employee)
+        
     except FileNotFoundError as exc:
         return {"error": str(exc)}
     

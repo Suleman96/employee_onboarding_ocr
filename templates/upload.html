@@ -330,10 +330,25 @@
                                     <option value="Reinigungskraft">Reinigungskraft</option>
                                     <option value="Glasreiniger">Glasreiniger</option>
                                     <option value="Public Area">Public Area</option>
+                                    <option value="Hausmann">Hausmann</option>
+                                    <option value="STW">STW</option>
+                                    <option value="NR">NR</option>
                                 </optgroup>
                                 <option value="other">Other</option>
                             </select>
                             <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." style="display:none; margin-top:4px;">
+                        </div>
+                        <div class="field" id="department_field" style="display:none;">
+                            <label>Work Area (Abteilung)</label>
+                            <select name="department" id="department_select">
+                                <option value="">Choose Work Area</option>
+                                <option value="Reinigung">Reinigung</option>
+                                <option value="Stewarding/Geschirrspüler-Abteilung">Stewarding / Geschirrspüler</option>
+                                <option value="Housekeeping/Zimmerreinigung">Housekeeping / Zimmerreinigung</option>
+                                <option value="Nachtreinigung">Nachtreinigung</option>
+                                <option value="Hausmann-/Wäschemannabteilung">Hausmann- / Wäscheabteilung</option>
+                                <option value="Public Area">Public Area</option>
+                            </select>
                         </div>
                         <div class="field"><label>Employment Type</label><select name="employment_type"><option value="">Choose</option><option value="Vollzeit">Vollzeit (Full-time)</option><option value="Teilzeit">Teilzeit (Part-time)</option><option value="Minijob">Minijob</option></select></div>
                         <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" onchange="autoFillEndDate()"></div>
@@ -353,6 +368,16 @@
                     </div>
                 </div>
 
+                <div id="contract-preview" style="margin-top: 0.75rem; padding: 0.6rem 0.9rem; 
+                background: #eef4ff; border-left: 4px solid #3d7ac2; border-radius: 5px; 
+                font-size: 0.8rem;">
+                    <span style="font-weight:600; color:#1a3a5c;"> Selected template:</span>
+                    <span id= "contract-filename" style="color:#2c3e50; margin-left: 0.5rem;">
+                        - select city. occupation and contract type -
+                    </span>
+                </div>
+
+                    
                 <button type="submit">Create Employee Record</button>
             </form>
 
@@ -402,13 +427,23 @@
 
         function handleOccupationChange(select) {
             const input = document.getElementById('occupation_input');
+            const deptField = document.getElementById('department_field');
+            const deptSelect = document.getElementById('department_select');
             if (select.value === 'other') {
                 input.style.display = 'block';
                 input.value = '';
                 input.focus();
+                deptField.style.display = 'none';
+                deptSelect.value = '';
             } else {
                 input.style.display = 'none';
                 input.value = select.value;
+                if (select.value === 'Reinigungskraft') {
+                    deptField.style.display = 'flex';
+                } else {
+                    deptField.style.display = 'none';
+                    deptSelect.value = '';
+                }
             }
         }
 
@@ -471,42 +506,65 @@
 
         // Add event listeners for automatic calculation and initialize custom fields
         document.addEventListener('DOMContentLoaded', function() {
-            const weeklyInput = document.getElementById('weekly_hours');
-            const daysInput = document.getElementById('work_days_per_week');
-            const hotelSelect = document.getElementById('hotel_name_select');
-            const workCitySelect = document.getElementById('work_city_select');
-            const occupationSelect = document.getElementById('occupation_select');
+            const weeklyInput = document.getElementByID('weekly_hours');
+            const daysInput = document.getElementByID('work_days_per_week');
+            const dailyInput = document.getElementByID('daily_hours');
+            const hotelSelect = document.getElementByID('hotel_name_select');
+            const workCitySelect = document.getElementByID('work_city_select');
+            const workCityInput = document.getElementByID('work_city_input');
+            const occupationSelect = document.getElementByID('occupation_select');
+            const occupationInput = document.getElementByID('occupation_input');
+            const contractType = document.getElementByID('contract_type');
 
             if (weeklyInput) {
                 weeklyInput.addEventListener('change', calcDailyHours);
                 weeklyInput.addEventListener('input', calcDailyHours);
+                weeklyInput.addEventListener('change', updateContractPreview);
+                weeklyInput.addEventListener('input', updateContractPreview);
             }
             if (daysInput) {
                 daysInput.addEventListener('change', calcDailyHours);
                 daysInput.addEventListener('input', calcDailyHours);
+                daysInput.addEventListener('change', updateContractPreview);
+                daysInput.addEventListener('input', updateContractPreview);
             }
             if (hotelSelect) {
                 handleHotelNameChange(hotelSelect);
+                hotelSelect.addEventListener('change', updateContractPreview);
             }
             if (workCitySelect) {
                 handleWorkCityChange(workCitySelect);
+                workCitySelect.addEventListener('change', updateContractPreview);
             }
+            if (workCityInput) {
+                workCityInput.addEventListener('input', updateContractPreview);
+            }
+            
             if (occupationSelect) {
                 handleOccupationChange(occupationSelect);
+                occupationSelect.addEventListener('change', updateContractPreview);
             }
+            if (occupationInput) {
+                occupationInput.addEventListener('input', updateContractPreview);
+            }
+            if (contractType) {
+                contractType.addEventListener('change', updateContractPreview);
+            }
+            
+            updateContractPreview();
         });
 
         function calcDailyHours() {
-            const weekly = parseFloat(document.getElementById('weekly_hours').value);
-            const days = parseFloat(document.getElementById('work_days_per_week').value);
+            const weekly = parseFloat(document.getElementByID('weekly_hours').value);
+            const days = parseFloat(document.getElementByID('work_days_per_week').value);
             if (weekly > 0 && days > 0) {
                 const daily = weekly / days;
-                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
+                document.getElementByID('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
             }
         }
 
         function handleContractDurationChange(select) {
-            const endDate = document.getElementById('end_date');
+            const endDate = document.getElementByID('end_date');
             if (select.value === 'permanent') {
                 endDate.value = '';
                 endDate.disabled = true;
@@ -518,9 +576,9 @@
         }
 
         function autoFillEndDate() {
-            const endDate = document.getElementById('end_date');
+            const endDate = document.getElementByID('end_date');
             if (endDate.disabled) return;
-            const startVal = document.getElementById('start_date').value;
+            const startVal = document.getElementByID('start_date').value;
             if (!startVal) return;
             const start = new Date(startVal);
             const end = new Date(start);
@@ -528,6 +586,412 @@
             end.setDate(end.getDate() - 1);
             endDate.value = end.toISOString().split('T')[0];
         }
+
+        function updateContractPreview(){
+            // 1. Read current values from the form
+
+            const cityRaw  = document.getElementByID('work_city_input').value.trim().toLowerCase();
+            const hotelRaw = document.getElementByID('hotel_name_select').value.toLowerCase();
+            const occRaw = document.getElementByID('occupation_input').value.toLowerCase();
+            const contract= document.getElementByID('contract_type').value.toLowerCase(); // unbefreist/befriest
+            const weekly = docment.getElementByID('weekly_hours').value.toLowerCase();
+            const days = document.getElementByID('work_days_per_week').value.toLowerCase();
+            const dail = document.getElementByID('daily_hours').value.toLowerCase();
+
+            const display = document.getElementbyID('contract-filename');
+            
+            // 2. Map contract type to German code (mirrors resolver.py CONTRACT_TYPE_ALIASES)
+            const contractCode = (contract == 'permanent') ? 'unbefristet' : 'befristet';
+
+            // 3. Map hotel or subgroup (mirrors resolvers.py SUBGROUP_ALIASES)
+            const hotelToSubgroup ={
+                'hotel adlon kempinski': 'adlon',
+                'adlon' : 'adlon',
+                'grand hyatt berlin': 'ghb',
+                'kontor haus':'ghb',
+                'linden palais': 'ghb',
+                'pressehaus podium': 'ghb',
+                'ghb': 'ghb',
+
+            };
+
+            const subgroup = hotelToSubgroup[hotelRaw] || null;
+            
+            // 4. Map occupation to code (mirrors resolver.py OCCUPATION_ALIASES)
+            const occMap = {
+                'floor supervisor': 'floor_supervisor'.
+                'hsk supervisor': 'hsk_supervisor',
+                'hsk manager': 'hsk_manager',
+                'zimmermädchen': 'zimmermädchen',
+                'minibar': 'minibar'
+                'reinigungskraft' : 'reinigungskraft',
+                'glasreiniger' : 'glasreiniger',
+                'public area' : 'public_area'
+                'hausmann':'hausmann'
+                'stw':'stw'
+                'nr': 'nr'
+
+            }
+            const occ = occMap[occRaw] || occRaw.replace(/ /g, '_').toLowerCase();
+
+            // 5. Build filename base on city
+            let filename= '-';
+
+            if (!cityRaw || !occ){
+                display.textContent = '- select city and occupation -'
+                return;
+            }
+
+            if (cityRaw== 'berlin'){
+                if (contractCode === 'unbefristet' && subgroup){
+                    filename= 'berlin_AV_${occ}_unbefristet_${subgroup}_40.docx';
+                } else {
+                    filename= 'AN_AV_berlin_${occ}_${contractCode}_40.docx';
+                }
+
+            } else if (['bergisch gladbach','düsseldorf','frankfurt','hamburg','münchen','köln'].includes(cityRaw)) {
+        
+                if (!weekly || !days || !daily) {
+                    display.textContent = ' -also select schedule preset or fill out weekly/daily hours-';
+                    return;
+                }
+                const cityCode = cityRaw.replace(/ /g, '_').replace('ü', 'ue').replace('ö', 'oe').replace('ä', 'ae');
+                filename = `AN_AV_${cityCode}_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
+            } else if (cityRaw === 'wien' || cityRaw === 'vienna'){
+                 if (!weekly || !days || !daily) {
+                    display.textContent = '— also select schedule (hours/days) —';
+                    return;
+                }
+                filename = `AN_AV_wien_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
+            } else {
+                display.textContent = '- unknown city -';
+                return;
+            }
+
+            display.textContent = filename;
+        }
+        
+             
+    </script>
+    <script type="text/plain" data-disabled-preview-script="legacy">
+        (function() {
+            function byId(id) {
+                return document.getElementById(id);
+            }
+
+            function setPreviewText(text) {
+                const preview = byId('contract-filename');
+                if (preview) {
+                    preview.textContent = text;
+                }
+            }
+
+            window.handleWorkCityChange = function(select) {
+                const input = byId('work_city_input');
+                if (!input) return;
+
+                if (select.value === 'other') {
+                    input.style.display = 'block';
+                    input.value = '';
+                    input.focus();
+                } else {
+                    input.style.display = 'none';
+                    input.value = select.value;
+                }
+
+                window.updateContractPreview();
+            };
+
+            window.handleOccupationChange = function(select) {
+                const input = byId('occupation_input');
+                const deptField = byId('department_field');
+                const deptSelect = byId('department_select');
+                if (!input || !deptField || !deptSelect) return;
+
+                if (select.value === 'other') {
+                    input.style.display = 'block';
+                    input.value = '';
+                    input.focus();
+                    deptField.style.display = 'none';
+                    deptSelect.value = '';
+                } else {
+                    input.style.display = 'none';
+                    input.value = select.value;
+                    if (select.value === 'Reinigungskraft') {
+                        deptField.style.display = 'flex';
+                    } else {
+                        deptField.style.display = 'none';
+                        deptSelect.value = '';
+                    }
+                }
+
+                window.updateContractPreview();
+            };
+
+            window.handleHotelNameChange = function(select) {
+                const input = byId('hotel_name_input');
+                if (!input) return;
+
+                if (select.value === 'other') {
+                    input.style.display = 'block';
+                    if (!input.value) {
+                        input.focus();
+                    }
+                } else {
+                    input.style.display = 'none';
+                    input.value = '';
+                }
+
+                window.updateContractPreview();
+            };
+
+            window.applySchedulePreset = function(select) {
+                const weeklyInput = byId('weekly_hours');
+                const daysInput = byId('work_days_per_week');
+                const dailyInput = byId('daily_hours');
+                const contractSelect = byId('contract_type');
+                if (!weeklyInput || !daysInput || !dailyInput || !contractSelect) return;
+
+                if (select.value === 'other') {
+                    weeklyInput.disabled = false;
+                    daysInput.disabled = false;
+                    dailyInput.disabled = false;
+                    contractSelect.disabled = false;
+                    weeklyInput.style.opacity = '1';
+                    daysInput.style.opacity = '1';
+                    dailyInput.style.opacity = '1';
+                    contractSelect.style.opacity = '1';
+                } else if (select.value) {
+                    const [weekly, days, daily] = select.value.split('|');
+                    weeklyInput.value = weekly;
+                    daysInput.value = days;
+                    dailyInput.value = daily;
+                    weeklyInput.disabled = true;
+                    daysInput.disabled = true;
+                    dailyInput.disabled = true;
+                    contractSelect.disabled = true;
+                    weeklyInput.style.opacity = '0.5';
+                    daysInput.style.opacity = '0.5';
+                    dailyInput.style.opacity = '0.5';
+                    contractSelect.style.opacity = '0.5';
+                } else {
+                    weeklyInput.disabled = true;
+                    daysInput.disabled = true;
+                    dailyInput.disabled = true;
+                    contractSelect.disabled = true;
+                    weeklyInput.style.opacity = '0.5';
+                    daysInput.style.opacity = '0.5';
+                    dailyInput.style.opacity = '0.5';
+                    contractSelect.style.opacity = '0.5';
+                }
+
+                window.updateContractPreview();
+            };
+
+            window.calcDailyHours = function() {
+                const weekly = parseFloat(byId('weekly_hours')?.value || '');
+                const days = parseFloat(byId('work_days_per_week')?.value || '');
+                const dailyInput = byId('daily_hours');
+
+                if (!dailyInput) return;
+                if (weekly > 0 && days > 0) {
+                    const daily = weekly / days;
+                    dailyInput.value = Number.isInteger(daily) ? String(daily) : daily.toFixed(1);
+                }
+            };
+
+            window.handleContractDurationChange = function(select) {
+                const endDate = byId('end_date');
+                if (!endDate) return;
+
+                if (select.value === 'permanent') {
+                    endDate.value = '';
+                    endDate.disabled = true;
+                    endDate.style.opacity = '0.4';
+                } else {
+                    endDate.disabled = false;
+                    endDate.style.opacity = '1';
+                }
+
+                window.updateContractPreview();
+            };
+
+            window.autoFillEndDate = function() {
+                const endDate = byId('end_date');
+                const startDate = byId('start_date');
+                if (!endDate || !startDate || endDate.disabled || !startDate.value) return;
+
+                const start = new Date(startDate.value);
+                const end = new Date(start);
+                end.setFullYear(end.getFullYear() + 1);
+                end.setDate(end.getDate() - 1);
+                endDate.value = end.toISOString().split('T')[0];
+            };
+
+            window.updateContractPreview = function() {
+                const cityInput = byId('work_city_input');
+                const hotelSelect = byId('hotel_name_select');
+                const hotelInput = byId('hotel_name_input');
+                const occupationInput = byId('occupation_input');
+                const contractType = byId('contract_type');
+                const weeklyInput = byId('weekly_hours');
+                const daysInput = byId('work_days_per_week');
+                const dailyInput = byId('daily_hours');
+
+                if (!cityInput || !hotelSelect || !hotelInput || !occupationInput || !contractType || !weeklyInput || !daysInput || !dailyInput) {
+                    return;
+                }
+
+                const cityRaw = cityInput.value.trim().toLowerCase();
+                const hotelSelectValue = hotelSelect.value.trim().toLowerCase();
+                const hotelRaw = hotelSelectValue === 'other'
+                    ? hotelInput.value.trim().toLowerCase()
+                    : hotelSelectValue;
+                const occRaw = occupationInput.value.trim().toLowerCase();
+                const contractRaw = contractType.value.trim().toLowerCase();
+                const weekly = weeklyInput.value.trim();
+                const days = daysInput.value.trim();
+                const daily = dailyInput.value.trim();
+
+                if (!cityRaw || !occRaw || !contractRaw) {
+                    setPreviewText('- select city, occupation and contract type -');
+                    return;
+                }
+
+                const contractCode = contractRaw === 'permanent' ? 'unbefristet' : 'befristet';
+                const subgroupMap = {
+                    'hotel adlon kempinski': 'adlon',
+                    'adlon': 'adlon',
+                    'grand hyatt berlin': 'ghb',
+                    'china club berlin': 'ghb',
+                    'kontor haus': 'ghb',
+                    'linden palais': 'ghb',
+                    'pressehaus podium': 'ghb',
+                    'ghb': 'ghb'
+                };
+                const occupationMap = {
+                    'floor supervisor': 'floor_supervisor',
+                    'hsk': 'hsk',
+                    'hsk supervisor': 'hsk_supervisor',
+                    'hsk manager': 'hsk_manager',
+                    'zimmermÃ¤dchen': 'zimmermaedchen',
+                    'zimmermädchen': 'zimmermaedchen',
+                    'minibar': 'minibar',
+                    'reinigungskraft': 'reinigungskraft',
+                    'glasreiniger': 'glasreiniger',
+                    'public area': 'public_area',
+                    'hausmann': 'hausmann',
+                    'stw': 'stw',
+                    'nr': 'nr'
+                };
+                const cityMap = {
+                    'berlin': 'berlin',
+                    'bergisch gladbach': 'bergisch_gladbach',
+                    'dÃ¼sseldorf': 'duesseldorf',
+                    'düsseldorf': 'duesseldorf',
+                    'dusseldorf': 'duesseldorf',
+                    'duesseldorf': 'duesseldorf',
+                    'frankfurt': 'frankfurt',
+                    'hamburg': 'hamburg',
+                    'mÃ¼nchen': 'muenchen',
+                    'münchen': 'muenchen',
+                    'munchen': 'muenchen',
+                    'muenchen': 'muenchen',
+                    'kÃ¶ln': 'koeln',
+                    'köln': 'koeln',
+                    'koeln': 'koeln',
+                    'wien': 'wien',
+                    'vienna': 'wien'
+                };
+
+                const subgroup = subgroupMap[hotelRaw] || null;
+                const occupationCode = occupationMap[occRaw] || occRaw.replace(/\s+/g, '_');
+                const cityCode = cityMap[cityRaw];
+
+                if (!cityCode) {
+                    setPreviewText('- unknown city -');
+                    return;
+                }
+
+                if (['bergisch_gladbach', 'duesseldorf', 'frankfurt', 'hamburg', 'muenchen', 'koeln', 'wien'].includes(cityCode) && (!weekly || !days || !daily)) {
+                    setPreviewText('- also select schedule preset or fill weekly/days/hours -');
+                    return;
+                }
+
+                let filename = '-';
+                if (cityCode === 'berlin') {
+                    if (contractCode === 'unbefristet' && subgroup) {
+                        filename = `berlin_AV_${occupationCode}_${contractCode}_${subgroup}_40.docx`;
+                    } else {
+                        filename = `ASN_AV_berlin_${occupationCode}_${contractCode}_40.docx`;
+                    }
+                } else if (cityCode === 'wien') {
+                    filename = `ASN_AV_wien_${occupationCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
+                } else {
+                    filename = `ASN_AV_${cityCode}_${occupationCode}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
+                }
+
+                setPreviewText(filename);
+            };
+
+            function initPreviewBindings() {
+                const weeklyInput = byId('weekly_hours');
+                const daysInput = byId('work_days_per_week');
+                const hotelSelect = byId('hotel_name_select');
+                const hotelInput = byId('hotel_name_input');
+                const workCitySelect = byId('work_city_select');
+                const workCityInput = byId('work_city_input');
+                const occupationSelect = byId('occupation_select');
+                const occupationInput = byId('occupation_input');
+                const contractType = byId('contract_type');
+                const schedulePreset = byId('schedule_preset');
+
+                if (weeklyInput) {
+                    weeklyInput.addEventListener('change', window.calcDailyHours);
+                    weeklyInput.addEventListener('input', window.calcDailyHours);
+                    weeklyInput.addEventListener('change', window.updateContractPreview);
+                    weeklyInput.addEventListener('input', window.updateContractPreview);
+                }
+                if (daysInput) {
+                    daysInput.addEventListener('change', window.calcDailyHours);
+                    daysInput.addEventListener('input', window.calcDailyHours);
+                    daysInput.addEventListener('change', window.updateContractPreview);
+                    daysInput.addEventListener('input', window.updateContractPreview);
+                }
+                if (hotelSelect) {
+                    window.handleHotelNameChange(hotelSelect);
+                    hotelSelect.addEventListener('change', window.updateContractPreview);
+                }
+                if (hotelInput) {
+                    hotelInput.addEventListener('input', window.updateContractPreview);
+                }
+                if (workCitySelect) {
+                    window.handleWorkCityChange(workCitySelect);
+                    workCitySelect.addEventListener('change', window.updateContractPreview);
+                }
+                if (workCityInput) {
+                    workCityInput.addEventListener('input', window.updateContractPreview);
+                }
+                if (occupationSelect) {
+                    window.handleOccupationChange(occupationSelect);
+                    occupationSelect.addEventListener('change', window.updateContractPreview);
+                }
+                if (occupationInput) {
+                    occupationInput.addEventListener('input', window.updateContractPreview);
+                }
+                if (contractType) {
+                    window.handleContractDurationChange(contractType);
+                    contractType.addEventListener('change', window.updateContractPreview);
+                }
+                if (schedulePreset) {
+                    schedulePreset.addEventListener('change', window.updateContractPreview);
+                }
+
+                window.updateContractPreview();
+            }
+
+            initPreviewBindings();
+        })();
     </script>
 </body>
 </html>

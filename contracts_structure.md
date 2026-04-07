@@ -5,34 +5,34 @@ contracts/
 ├── berlin/
 │   ├── befristet/
 │   │   └── 2026/
-│   │       ├── Berlin_AV_FLOOR SUPERVISOR_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_GLASREINIGER_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_HAUSMANN_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_HSK_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_MINIBAR_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_Minijob_befristet_aktuell.docx
-│   │       ├── Berlin_AV_NR_BEFRISTET_40 Std_2025.docx
-│   │       ├── Berlin_AV_PUBLIC AREA_BEFRISTET_40 Std_2025.docx
-│   │       ├── BERLIN_AV_REINIGUNGSKRAFT_40 Std_2025.docx
-│   │       └── Berlin_AV_STW_BEFRISTET_40 Std_2025.docx
+│   │       ├── ASN_AV_berlin_floor_supervisor_befristet_40.docx
+│   │       ├── ASN_AV_berlin_glasreiniger_befristet_40.docx
+│   │       ├── ASN_AV_berlin_hausmann_befristet_40.docx
+│   │       ├── ASN_AV_berlin_hsk_befristet_40.docx
+│   │       ├── ASN_AV_berlin_minibar_befristet_40.docx
+│   │       ├── ASN_AV_berlin_nr_befristet_40.docx
+│   │       ├── ASN_AV_berlin_public_area_befristet_40.docx
+│   │       ├── ASN_AV_berlin_reinigungskraft_befristet_40.docx
+│   │       ├── ASN_AV_berlin_stw_befristet_40.docx
+│   │       └── Berlin_AV_Minijob_befristet_aktuell.docx
 │   └── unbefristet/
 │       ├── VORLAGEN Unbefristet_Adlon/
-│       │   ├── Berlin_AV_GLASREINIGER_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│       │   ├── Berlin_AV_HAUSMANN_UNBEFRISTET_40 Std_Neu_mit Probezeit.docx
-│       │   ├── Berlin_AV_HSK_UNBEFRISTET_40 Std_NEU_ mit Probezeit.docx
-│       │   ├── Berlin_AV_MINIBAR_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│       │   ├── Berlin_AV_NR_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│       │   ├── Berlin_AV_PUBLIC AREA_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│       │   ├── Berlin_AV_STW_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│       │   └── Berlin_AV_SUPERVISOR_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
+│       │   ├── berlin_AV_floor_supervisor_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_glasreiniger_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_hausmann_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_hsk_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_minibar_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_nr_unbefristet_adlon_40.docx
+│       │   ├── berlin_AV_public_area_unbefristet_adlon_40.docx
+│       │   └── berlin_AV_stw_unbefristet_adlon_40.docx
 │       └── VORLAGEN Unbefristet_GHB/
-│           ├── Berlin_AV_Glasreiniger_GHB_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│           ├── Berlin_AV_HAUSMANN_GHB_UNBEFRISTET_40 Std_Neu_mit Probezeit.docx
-│           ├── Berlin_AV_HSK_GHB_UNBEFRISTET_40 Std_NEU_ mit Probezeit.docx
-│           ├── Berlin_AV_MINIBAR_GHB_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│           ├── Berlin_AV_NR_GHB_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│           ├── Berlin_AV_PUBLIC AREA_GHB_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
-│           └── Berlin_AV_SUPERVISOR_GHB_UNBEFRISTET_40 Std_NEU_mit Probezeit.docx
+│           ├── berlin_AV_floor_supervisor_unbefristet_ghb_40.docx
+│           ├── berlin_AV_glasreiniger_unbefristet_ghb_40.docx
+│           ├── berlin_AV_hausmann_unbefristet_ghb_40.docx
+│           ├── berlin_AV_hsk_unbefristet_ghb_40.docx
+│           ├── berlin_AV_minibar_unbefristet_ghb_40.docx
+│           ├── berlin_AV_nr_unbefristet_ghb_40.docx
+│           └── berlin_AV_public_area_unbefristet_ghb_40.docx
 ├── berlin_template.docx
 ├── generator.py
 ├── koeln/
@@ -126,8 +126,8 @@ This document describes the contract template organization for the `employee_onb
   - Contains fixed-term (`befristet`) Berlin contract templates.
   - Includes year-specific subfolders such as `2026/`.
   - Example files:
-    - `Berlin_AV_HAUSMANN_BEFRISTET_40 Std_2025.docx`
-    - `Berlin_AV_HSK_BEFRISTET_40 Std_2025.docx`
+    - `ASN_AV_berlin_hausmann_befristet_40.docx`
+    - `ASN_AV_berlin_hsk_befristet_40.docx`
 
 - `unbefristet/`
   - Contains permanent (`unbefristet`) Berlin contract templates.
@@ -135,8 +135,8 @@ This document describes the contract template organization for the `employee_onb
     - `VORLAGEN Unbefristet_Adlon/`
     - `VORLAGEN Unbefristet_GHB/`
   - Example files:
-    - `Berlin_AV_HSK_UNBEFRISTET_40 Std_NEU_ mit Probezeit.docx`
-    - `Berlin_AV_MINIBAR_UNBEFRISTET_40 Std_Neu_mit Probezeit.docx`
+    - `berlin_AV_hsk_unbefristet_adlon_40.docx`
+    - `berlin_AV_minibar_unbefristet_ghb_40.docx`
 
 ### `contracts/koeln/`
 
@@ -162,13 +162,16 @@ This document describes the contract template organization for the `employee_onb
 
 ## Template Filename Conventions
 
+- Berlin befristet: `ASN_AV_berlin_{occupation}_befristet_40.docx`
+- Berlin unbefristet (with subgroup): `berlin_AV_{occupation}_unbefristet_{subgroup}_40.docx`
+  - `{subgroup}` is either `adlon` or `ghb`
 - Template file names generally encode:
   - City or location identifier
   - `AV` prefix for employment contract
-  - Job title or role
-  - Contract type (`BEFRISTET`, `UNBEFRISTET`)
-  - Hours per week or schedule details
-  - Additional suffixes like `Neu` or `mit Probezeit`
+  - Occupation code (lowercase, underscores)
+  - Contract type (`befristet` or `unbefristet`)
+  - Subgroup (`adlon` / `ghb`) where applicable
+  - Hours per week (e.g. `40`)
 
 ## Generated Output Structure
 
