@@ -415,6 +415,8 @@
     <script>
         function handleWorkCityChange(select) {
             const input = document.getElementById('work_city_input');
+            const hotelSelect = document.getElementById('hotel_name_select');
+            const hotelInput = document.getElementById('hotel_name_input');
             if (select.value === 'other') {
                 input.style.display = 'block';
                 input.value = '';
@@ -422,6 +424,17 @@
             } else {
                 input.style.display = 'none';
                 input.value = select.value;
+            }
+            const isBerlin = select.value.toLowerCase() === 'berlin';
+            hotelSelect.disabled = false;
+            hotelSelect.style.opacity = '1';
+            Array.from(hotelSelect.options).forEach(opt => {
+                opt.disabled = !isBerlin && opt.value !== 'other' && opt.value !== '';
+            });
+            if (!isBerlin) {
+                hotelSelect.value = '';
+                hotelInput.style.display = 'none';
+                hotelInput.value = '';
             }
         }
 
@@ -506,13 +519,13 @@
 
         // Add event listeners for automatic calculation and initialize custom fields
         document.addEventListener('DOMContentLoaded', function() {
-            const weeklyInput = document.getElementByID('weekly_hours');
-            const daysInput = document.getElementByID('work_days_per_week');
-            const dailyInput = document.getElementByID('daily_hours');
-            const hotelSelect = document.getElementByID('hotel_name_select');
-            const workCitySelect = document.getElementByID('work_city_select');
-            const workCityInput = document.getElementByID('work_city_input');
-            const occupationSelect = document.getElementByID('occupation_select');
+            const weeklyInput = document.getElementById('weekly_hours');
+            const daysInput = document.getElementById('work_days_per_week');
+            const dailyInput = document.getElementById('daily_hours');
+            const hotelSelect = document.getElementById('hotel_name_select');
+            const workCitySelect = document.getElementById('work_city_select');
+            const workCityInput = document.getElementById('work_city_input');
+            const occupationSelect = document.getElementById('occupation_select');
             const occupationInput = document.getElementByID('occupation_input');
             const contractType = document.getElementByID('contract_type');
 
@@ -555,16 +568,16 @@
         });
 
         function calcDailyHours() {
-            const weekly = parseFloat(document.getElementByID('weekly_hours').value);
-            const days = parseFloat(document.getElementByID('work_days_per_week').value);
+            const weekly = parseFloat(document.getElementById('weekly_hours').value);
+            const days = parseFloat(document.getElementById('work_days_per_week').value);
             if (weekly > 0 && days > 0) {
                 const daily = weekly / days;
-                document.getElementByID('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
+                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
             }
         }
 
         function handleContractDurationChange(select) {
-            const endDate = document.getElementByID('end_date');
+            const endDate = document.getElementById('end_date');
             if (select.value === 'permanent') {
                 endDate.value = '';
                 endDate.disabled = true;
@@ -576,9 +589,9 @@
         }
 
         function autoFillEndDate() {
-            const endDate = document.getElementByID('end_date');
+            const endDate = document.getElementById('end_date');
             if (endDate.disabled) return;
-            const startVal = document.getElementByID('start_date').value;
+            const startVal = document.getElementById('start_date').value;
             if (!startVal) return;
             const start = new Date(startVal);
             const end = new Date(start);
@@ -590,15 +603,15 @@
         function updateContractPreview(){
             // 1. Read current values from the form
 
-            const cityRaw  = document.getElementByID('work_city_input').value.trim().toLowerCase();
-            const hotelRaw = document.getElementByID('hotel_name_select').value.toLowerCase();
-            const occRaw = document.getElementByID('occupation_input').value.toLowerCase();
-            const contract= document.getElementByID('contract_type').value.toLowerCase(); // unbefreist/befriest
-            const weekly = docment.getElementByID('weekly_hours').value.toLowerCase();
-            const days = document.getElementByID('work_days_per_week').value.toLowerCase();
-            const dail = document.getElementByID('daily_hours').value.toLowerCase();
+            const cityRaw  = document.getElementById('work_city_input').value.trim().toLowerCase();
+            const hotelRaw = document.getElementById('hotel_name_select').value.toLowerCase();
+            const occRaw = document.getElementById('occupation_input').value.toLowerCase();
+            const contract= document.getElementById('contract_type').value.toLowerCase(); // unbefreist/befriest
+            const weekly = document.getElementById('weekly_hours').value.toLowerCase();
+            const days = document.getElementById('work_days_per_week').value.toLowerCase();
+            const daily = document.getElementById('daily_hours').value.toLowerCase();
 
-            const display = document.getElementbyID('contract-filename');
+            const display = document.getElementById('contract-filename');
             
             // 2. Map contract type to German code (mirrors resolver.py CONTRACT_TYPE_ALIASES)
             const contractCode = (contract == 'permanent') ? 'unbefristet' : 'befristet';
@@ -623,12 +636,12 @@
                 'hsk supervisor': 'hsk_supervisor',
                 'hsk manager': 'hsk_manager',
                 'zimmermädchen': 'zimmermädchen',
-                'minibar': 'minibar'
+                'minibar': 'minibar',
                 'reinigungskraft' : 'reinigungskraft',
                 'glasreiniger' : 'glasreiniger',
-                'public area' : 'public_area'
-                'hausmann':'hausmann'
-                'stw':'stw'
+                'public area' : 'public_area',
+                'hausmann':'hausmann',
+                'stw':'stw',
                 'nr': 'nr'
 
             }
@@ -644,9 +657,9 @@
 
             if (cityRaw== 'berlin'){
                 if (contractCode === 'unbefristet' && subgroup){
-                    filename= 'berlin_AV_${occ}_unbefristet_${subgroup}_40.docx';
+                    filename= `berlin_AV_${occ}_unbefristet_${subgroup}_40.docx`;
                 } else {
-                    filename= 'AN_AV_berlin_${occ}_${contractCode}_40.docx';
+                    filename= `ASN_AV_berlin_${occ}_${contractCode}_40.docx`;
                 }
 
             } else if (['bergisch gladbach','düsseldorf','frankfurt','hamburg','münchen','köln'].includes(cityRaw)) {
@@ -673,7 +686,7 @@
         
              
     </script>
-    <script type="text/plain" data-disabled-preview-script="legacy">
+    <script>
         (function() {
             function byId(id) {
                 return document.getElementById(id);
@@ -688,6 +701,8 @@
 
             window.handleWorkCityChange = function(select) {
                 const input = byId('work_city_input');
+                const hotelSelect = byId('hotel_name_select');
+                const hotelInput = byId('hotel_name_input');
                 if (!input) return;
 
                 if (select.value === 'other') {
@@ -697,6 +712,19 @@
                 } else {
                     input.style.display = 'none';
                     input.value = select.value;
+                }
+
+                const isBerlin = select.value.toLowerCase() === 'berlin';
+                if (hotelSelect) {
+                    hotelSelect.disabled = false;
+                    hotelSelect.style.opacity = '1';
+                    Array.from(hotelSelect.options).forEach(opt => {
+                        opt.disabled = !isBerlin && opt.value !== 'other' && opt.value !== '';
+                    });
+                    if (!isBerlin) {
+                        hotelSelect.value = '';
+                        if (hotelInput) { hotelInput.style.display = 'none'; hotelInput.value = ''; }
+                    }
                 }
 
                 window.updateContractPreview();

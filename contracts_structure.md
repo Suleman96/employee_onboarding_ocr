@@ -35,45 +35,47 @@ contracts/
 │           └── berlin_AV_public_area_unbefristet_ghb_40.docx
 ├── berlin_template.docx
 ├── generator.py
-├── koeln/
-│   ├── BERGISCH GLADBACH_AV_HM-WM_BEFRISTET_40 Std.docx
-│   ├── BERGISCH GLADBACH_AV_HSK SUPERVISOR_BEFRISTET_40 Std.docx
-│   ├── BERGISCH GLADBACH_AV_HSK_BEFRISTET_25 Std_5 Tage-5 Std.docx
-│   ├── BERGISCH GLADBACH_AV_HSK_BEFRISTET_30 Std_5 Tage-6 Std.docx
-│   ├── BERGISCH GLADBACH_AV_HSK_BEFRISTET_35 Std_5 Tage-7 Std.docx
-│   ├── BERGISCH GLADBACH_AV_HSK_BEFRISTET_40 Std.docx
-│   └── BERGISCH GLADBACH_AV_NR_BEFRISTET_40 Std.docx
+├── koeln_group/
+│   ├── bergisch_gladbach/
+│   │   ├── ASN_AV_bergisch_gladbach_hausmann_befristet_40_Std_5_Tage_8_Std.docx
+│   │   ├── ASN_AV_bergisch_gladbach_hsk_befristet_25_Std_5_Tage_5_Std.docx
+│   │   ├── ASN_AV_bergisch_gladbach_hsk_befristet_30_Std_5_Tage_6_Std.docx
+│   │   ├── ASN_AV_bergisch_gladbach_hsk_befristet_35_Std_5_Tage_7_Std.docx
+│   │   ├── ASN_AV_bergisch_gladbach_hsk_befristet_40_Std_5_Tage_8_Std.docx
+│   │   ├── ASN_AV_bergisch_gladbach_hsk_supervisor_befristet_40_Std_5_Tage_8_Std.docx
+│   │   └── ASN_AV_bergisch_gladbach_nr_befristet_40_Std_5_Tage_8_Std.docx
+│   ├── duesseldorf/
+│   │   ├── DUS_AV_NR_UNBEFRISTET_40 Std_NEU.docx
+│   │   └── DUS_AV_STW_UNBEFRISTET_40 Std_NEU.docx
+│   ├── frankfurt/
+│   │   ├── Vorlagen Befristet/
+│   │   │   ├── FRA_AV_NR_BEFRISTET_40 Std_NEU.docx
+│   │   │   └── FRA_AV_PA-BOH_BEFRISTET_40 Std_NEU.docx
+│   │   └── Vorlagen Unbefristet AV/
+│   │       ├── MUC_AV_Back of House Manager_UNBEFRISTET_40 Std_NEU mit Probezeit.docx
+│   │       ├── MUC_AV_HM-WM_UNBEFRISTET_40 Std_NEU.docx
+│   │       ├── MUC_AV_HSK_UNBEFRISTET_40 Std_NEU.docx
+│   │       ├── MUC_AV_MB_UNBEFRISTET_40 Std_NEU.docx
+│   │       ├── MUC_AV_NR_UNBEFRISTET_40 Std_NEU.docx
+│   │       ├── MUC_AV_PA-BOH_UNBEFRISTET_40 Std_NEU.docx
+│   │       ├── MUC_AV_STW_UNBEFRISTET_40 Std_NEU.docx
+│   │       └── MUC_AV_SV_UNBEFRISTET_40 Std_NEU.docx
+│   └── hamburg/
+│       ├── Vorlagen Befristet/
+│       │   ├── HAM_AV_NR_BEFRISTET_40 Std_NEU.docx
+│       │   └── HAM_AV_PA-BOH_BEFRISTET_40 Std_NEU.docx
+│       └── Vorlagen Unbefristet AV/
+│           ├── MUC_AV_Back of House Manager_UNBEFRISTET_40 Std_NEU mit Probezeit.docx
+│           ├── MUC_AV_HM-WM_UNBEFRISTET_40 Std_NEU.docx
+│           ├── MUC_AV_HSK_UNBEFRISTET_40 Std_NEU.docx
+│           ├── MUC_AV_MB_UNBEFRISTET_40 Std_NEU.docx
+│           ├── MUC_AV_NR_UNBEFRISTET_40 Std_NEU.docx
+│           ├── MUC_AV_PA-BOH_UNBEFRISTET_40 Std_NEU.docx
+│           ├── MUC_AV_STW_UNBEFRISTET_40 Std_NEU.docx
+│           └── MUC_AV_SV_UNBEFRISTET_40 Std_NEU.docx
 ├── registry.py
+├── resolver.py
 ├── temp_template/
-│   ├── [Content_Types].xml
-│   ├── _rels/
-│   │   └── .rels
-│   ├── customXml/
-│   │   ├── item1.xml
-│   │   ├── itemProps1.xml
-│   │   └── _rels/
-│   │       └── item1.xml.rels
-│   ├── docProps/
-│   │   ├── app.xml
-│   │   ├── core.xml
-│   │   └── custom.xml
-│   └── word/
-│       ├── document.xml
-│       ├── endnotes.xml
-│       ├── fontTable.xml
-│       ├── footnotes.xml
-│       ├── header1.xml
-│       ├── header2.xml
-│       ├── media/
-│       ├── numbering.xml
-│       ├── settings.xml
-│       ├── styles.xml
-│       ├── theme/
-│       │   └── theme1.xml
-│       ├── webSettings.xml
-│       └── _rels/
-│           ├── document.xml.rels
-│           └── header2.xml.rels
 └── wien/
     ├── ASN AV_20 Std_5 Tage-4 Std_Reinigungskraft_TD_Neu.docx
     ├── ASN AV_24 Std_3 Tage-8 Std_Zimmermädchen_Neu.docx
@@ -138,13 +140,19 @@ This document describes the contract template organization for the `employee_onb
     - `berlin_AV_hsk_unbefristet_adlon_40.docx`
     - `berlin_AV_minibar_unbefristet_ghb_40.docx`
 
-### `contracts/koeln/`
+### `contracts/koeln_group/`
 
-- Contains contract templates for Cologne.
-- Filenames include city, contract type, hours, and occupation.
-- Example files:
-  - `BERGISCH GLADBACH_AV_HSK_SUPERVISOR_BEFRISTET_40 Std.docx`
-  - `BERGISCH GLADBACH_AV_NR_BEFRISTET_40 Std.docx`
+Contains contract templates for all Koeln-group cities. Each city has its own subfolder.
+
+- `bergisch_gladbach/` — all befristet, pattern: `ASN_AV_bergisch_gladbach_{occupation}_befristet_{weekly}_Std_{days}_Tage_{daily}_Std.docx`
+  - Occupations: `hausmann`, `hsk`, `hsk_supervisor`, `nr`
+  - Schedules: 25/5/5, 30/5/6, 35/5/7, 40/5/8
+
+- `duesseldorf/` — unbefristet only (files not yet renamed to resolver pattern)
+
+- `frankfurt/` — split into `Vorlagen Befristet/` and `Vorlagen Unbefristet AV/` subfolders (files not yet renamed)
+
+- `hamburg/` — split into `Vorlagen Befristet/` and `Vorlagen Unbefristet AV/` subfolders (files not yet renamed)
 
 ### `contracts/wien/`
 
@@ -162,16 +170,12 @@ This document describes the contract template organization for the `employee_onb
 
 ## Template Filename Conventions
 
-- Berlin befristet: `ASN_AV_berlin_{occupation}_befristet_40.docx`
-- Berlin unbefristet (with subgroup): `berlin_AV_{occupation}_unbefristet_{subgroup}_40.docx`
+- **Berlin befristet:** `ASN_AV_berlin_{occupation}_befristet_40.docx`
+- **Berlin unbefristet:** `berlin_AV_{occupation}_unbefristet_{subgroup}_40.docx`
   - `{subgroup}` is either `adlon` or `ghb`
-- Template file names generally encode:
-  - City or location identifier
-  - `AV` prefix for employment contract
-  - Occupation code (lowercase, underscores)
-  - Contract type (`befristet` or `unbefristet`)
-  - Subgroup (`adlon` / `ghb`) where applicable
-  - Hours per week (e.g. `40`)
+- **Koeln group (bergisch_gladbach):** `ASN_AV_bergisch_gladbach_{occupation}_befristet_{weekly}_Std_{days}_Tage_{daily}_Std.docx`
+- **Koeln group (other cities):** `ASN_AV_{city}_{occupation}_{contract_type}_{weekly}_Std_{days}_Tage_{daily}_Std.docx` *(duesseldorf, frankfurt, hamburg, muenchen — not yet renamed)*
+- **Wien:** `ASN_AV_wien_{occupation}_{weekly}_Std_{days}_Tage_{daily}_Std.docx` *(not yet renamed)*
 
 ## Generated Output Structure
 
