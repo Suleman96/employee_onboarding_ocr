@@ -316,11 +316,7 @@
                             <label>Occupation</label>
                             <select id="occupation_select" onchange="handleOccupationChange(this)">
                                 <option value="">Choose Occupation</option>
-                                <optgroup label="Management">
-                                    <option value="Floor Supervisor">Floor Supervisor</option>
-                                    <option value="HSK Supervisor">HSK Supervisor</option>
-                                    <option value="HSK Manager">HSK Manager</option>
-                                </optgroup>
+                                
                                 <optgroup label="Housekeeping">
                                     <option value="HSK">HSK (Housekeeping)</option>
                                     <option value="Zimmermädchen">Zimmermädchen</option>
@@ -333,6 +329,11 @@
                                     <option value="Hausmann">Hausmann</option>
                                     <option value="STW">STW</option>
                                     <option value="NR">NR</option>
+                                </optgroup>
+                                <optgroup label="Management">
+                                    <option value="Floor Supervisor">Floor Supervisor</option>
+                                    <option value="HSK Supervisor">HSK Supervisor</option>
+                                    <option value="HSK Manager">HSK Manager</option>
                                 </optgroup>
                                 <option value="other">Other</option>
                             </select>
@@ -412,6 +413,8 @@
             </datalist>
         </div>
     </div>
+
+    <!--
     <script>
         function handleWorkCityChange(select) {
             const input = document.getElementById('work_city_input');
@@ -526,8 +529,8 @@
             const workCitySelect = document.getElementById('work_city_select');
             const workCityInput = document.getElementById('work_city_input');
             const occupationSelect = document.getElementById('occupation_select');
-            const occupationInput = document.getElementByID('occupation_input');
-            const contractType = document.getElementByID('contract_type');
+            const occupationInput = document.getElementById('occupation_input');
+            const contractType = document.getElementById('contract_type');
 
             if (weeklyInput) {
                 weeklyInput.addEventListener('change', calcDailyHours);
@@ -632,7 +635,7 @@
             
             // 4. Map occupation to code (mirrors resolver.py OCCUPATION_ALIASES)
             const occMap = {
-                'floor supervisor': 'floor_supervisor'.
+                'floor supervisor': 'floor_supervisor',
                 'hsk supervisor': 'hsk_supervisor',
                 'hsk manager': 'hsk_manager',
                 'zimmermädchen': 'zimmermädchen',
@@ -669,7 +672,7 @@
                     return;
                 }
                 const cityCode = cityRaw.replace(/ /g, '_').replace('ü', 'ue').replace('ö', 'oe').replace('ä', 'ae');
-                filename = `AN_AV_${cityCode}_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
+                filename = `ASN_AV_${cityCode}_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
             } else if (cityRaw === 'wien' || cityRaw === 'vienna'){
                  if (!weekly || !days || !daily) {
                     display.textContent = '— also select schedule (hours/days) —';
@@ -686,6 +689,10 @@
         
              
     </script>
+
+
+    -->
+
     <script>
         (function() {
             function byId(id) {

@@ -332,20 +332,26 @@
                             <label>Occupation</label>
                             <select id="occupation_select" onchange="handleOccupationChange(this)">
                                 <option value="">Choose Occupation</option>
-                                <optgroup label="Management">
+                                
+                                <optgroup label="Housekeeping">
+                                    <option value="HSK" {% if employee.occupation == "HSK" %}selected{% endif %}>HSK (Housekeeping)</option>
+                                    <option value="Zimmermädchen" {% if employee.occupation == "Zimmermädchen" %}selected{% endif %}>Zimmermädchen</option>
+                                    <option value="Minibar" {% if employee.occupation == "Minibar" %}selected{% endif %}>Minibar</option>
+                                </optgroup>
+                                <optgroup label="Cleaning / Facility">
+                                    <option value="Reinigungskraft" {% if employee.occupation == "Reinigungskraft" %}selected{% endif %}>Reinigungskraft</option>
+                                    <option value="Glasreiniger" {% if employee.occupation == "Glasreiniger" %}selected{% endif %}>Glasreiniger</option>
+                                    <option value="Public Area" {% if employee.occupation == "Public Area" %}selected{% endif %}>Public Area</option>
+                                    <option value="Hausmann" {% if employee.occupation == "Hausmann" %}selected{% endif %}>Hausmann</option>
+                                    <option value="STW" {% if employee.occupation == "STW" %}selected{% endif %}>STW</option>
+                                    <option value="NR" {% if employee.occupation == "NR" %}selected{% endif %}>NR</option>
+                                </optgroup>
+                                <optgroup label="Supervision / Management">
                                     <option value="Floor Supervisor" {% if employee.occupation == "Floor Supervisor" %}selected{% endif %}>Floor Supervisor</option>
                                     <option value="HSK Supervisor" {% if employee.occupation == "HSK Supervisor" %}selected{% endif %}>HSK Supervisor</option>
                                     <option value="HSK Manager" {% if employee.occupation == "HSK Manager" %}selected{% endif %}>HSK Manager</option>
                                 </optgroup>
-                                <optgroup label="Housekeeping">
-                                    <option value="HSK" {% if employee.occupation == "HSK" %}selected{% endif %}>HSK (Housekeeping)</option>
-                                    <option value="Zimmermädchen" {% if employee.occupation == "Zimmermädchen" %}selected{% endif %}>Zimmermädchen</option>
-                                </optgroup>
-                                <optgroup label="Cleaning">
-                                    <option value="Reinigungskraft" {% if employee.occupation == "Reinigungskraft" %}selected{% endif %}>Reinigungskraft</option>
-                                    <option value="Glasreiniger" {% if employee.occupation == "Glasreiniger" %}selected{% endif %}>Glasreiniger</option>
-                                </optgroup>
-                                <option value="other" {% if employee.occupation and employee.occupation not in ["Floor Supervisor", "HSK Supervisor", "HSK Manager", "HSK", "Zimmermädchen", "Reinigungskraft", "Glasreiniger"] %}selected{% endif %}>Other</option>
+                                <option value="other" {% if employee.occupation and employee.occupation not in ["HSK", "Zimmermädchen", "Minibar", "Reinigungskraft", "Glasreiniger", "Public Area", "Hausmann", "STW", "NR", "Floor Supervisor", "HSK Supervisor", "HSK Manager"] %}selected{% endif %}>Other</option>
                             </select>
                             <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." value="{{ employee.occupation or '' }}" style="display:none; margin-top:4px;">
                         </div>

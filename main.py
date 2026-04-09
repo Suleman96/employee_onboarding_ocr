@@ -17,6 +17,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from database import create_tables, get_db, Employee, AuditLog
 from contracts.generator import convert_docx_to_pdf, generate_contract_for_employee
+from contracts.resolver import normalize_contract_attributes, resolve_template_path
 from pathlib import Path
 
 from typing import List
@@ -486,7 +487,22 @@ def list_employees(db: Session = Depends(get_db)):
     employees = db.query(Employee).all()
     return employees
 
-
+@app.get("/debug-template/{employee_id}")
+def debug_template(employee_id:int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    
+    if not employee:
+        return{"error": "Employee not found"}
+    
+    attrs = normalize_contract_attributes(employee)
+    template_path= resolve_template_path(employee)
+    
+    if not template_path or not template_path.exists():
+        return {"error": "No suitable template found for this employee"}
+    return {
+        "attrs": attrs,
+        "template_path": str(template_path),
+    }
 
 
 @app.get("/generate-contract/{employee_id}")

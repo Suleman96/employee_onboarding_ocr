@@ -61,10 +61,25 @@ OCCUPATION_ALIASES = {
     "public area": "public_area",
     "public_area": "public_area",
     "stw": "stw",
+    "stw supervisor": "stw_supervisor",
+    "stw manager": "stw_manager",
     "reinigungskraft": "reinigungskraft",
+    "reinigungskraft td": "reinigungskraft_td",
+    "reinigungskraft pa": "reinigungskraft_pa",
+    "reinigungskraft hm": "reinigungskraft_hm",
+    "reinigungskraft nr": "reinigungskraft_nr",
+    "reinigungskraft public": "reinigungskraft_public",
+    "reinigungskraft stw": "reinigungskraft_stw",
     "zimmermädchen": "zimmermaedchen",
     "zimmermadchen": "zimmermaedchen",
     "zimmermaedchen": "zimmermaedchen",
+
+    # Wien-specific management roles observed in templates
+    "quality manager": "quality_manager",
+    "objektleitung nr": "objektleitung_nr",
+    "objektleitung_nr": "objektleitung_nr",
+    "ass. hsk manager": "ass_hsk_manager",
+    "ass hsk manager": "ass_hsk_manager",
 }
 
 
@@ -203,6 +218,7 @@ _BERLIN_ROLE_TOKEN = {
     "zimmermaedchen": {"befristet": None, "unbefristet": None},
 }
 
+
 _KOELN_GROUP_ROLE_TOKEN = {
     "hausmann": "HM-WM",
     "hsk": "HSK",
@@ -212,17 +228,28 @@ _KOELN_GROUP_ROLE_TOKEN = {
 
 _WIEN_ROLE_TOKEN = {
     "reinigungskraft": "Reinigungskraft",
+    "reinigungskraft_td": "Reinigungskraft TD",
+    "reinigungskraft_pa": "Reinigungskraft PA",
+    "reinigungskraft_hm": "Reinigungskraft HM",
+    "reinigungskraft_nr": "Reinigungskraft NR",
+    "reinigungskraft_public": "Reinigungskraft Public",
+    "reinigungskraft_stw": "Reinigungskraft STW",
     "zimmermaedchen": "Zimmermädchen",
     "hsk_supervisor": "HSK Supervisor",
     "hsk_manager": "HSK Manager",
-    "stw": "STW Supervisor",
+    "ass_hsk_manager": "Ass. HSK Manager",
+    "stw_supervisor": "STW Supervisor",
+    "stw_manager": "STW Manager",
+    "objektleitung_nr": "Objektleitung NR",
+    "quality_manager": "Quality Manager",
 }
 
 def _pick_by_contains(dir_path: Path, required_substrings: list[str]) -> Path:
     candidates = sorted(dir_path.glob("*.docx"))
     for path in candidates:
-        name = path.name.lower()
-        if all(s.lower() in name for s in required_substrings):
+        # Make matching resilient to "PUBLIC AREA" vs "public_area" filename drift.
+        name_norm = path.name.lower().replace("_", " ").replace(".", "")
+        if all(s.lower().replace("_", " ").replace(".", "") in name_norm for s in required_substrings):
             return path
     checked = "\n".join(str(p) for p in candidates) or f"(no .docx files in {dir_path})"
     raise FileNotFoundError(
@@ -233,6 +260,25 @@ def _pick_by_contains(dir_path: Path, required_substrings: list[str]) -> Path:
         + "\nChecked:\n"
         + checked
     )
+
+def _pick_by_contains_fallback(dir_path: Path, required_options: list[list[str]]) -> Path:
+    """
+    Try multiple required-substring sets (in order) and return the first match.
+
+    This is useful when template naming conventions drift across years/folders
+    (e.g., "40 Std" vs "_40").
+    """
+    last_err: Optional[Exception] = None
+    for required in required_options:
+        try:
+            return _pick_by_contains(dir_path, required)
+        except FileNotFoundError as e:
+            last_err = e
+            continue
+    # Bubble up the last error (includes the checked file list).
+    if last_err:
+        raise last_err
+    raise FileNotFoundError(f"No matching template found in {dir_path}")
 
 def _require(value: Any, field: str) -> Any:
     if value is None or value == "":
@@ -264,21 +310,30 @@ def resolve_berlin_template(attrs: Dict[str, Any]) -> Path:
     if role_token is None:
         raise ValueError(f"No Berlin template mapping for occupation '{occupation}' and '{contract_type}'")
 
+    # Berlin filenames have appeared in two conventions:
+    # - older: "..._40 Std_..." (with a space + "Std")
+    # - current repo (2026 befristet): "..._befristet_40.docx" (underscore + number, no "Std")
+    hours_required_sets = [
+        ["ASN_AV_berlin", role_token, "BEFRISTET", f"{hours} Std"],
+        ["ASN_AV_berlin", role_token, "BEFRISTET", f"_{hours}"],
+    ]
+
     if contract_type == "befristet" and occupation == "floor_supervisor":
-        # Example: Berlin_AV_FLOOR SUPERVISOR_BEFRISTET_40 Std_2025.docx
-        return _pick_by_contains(base_dir, ["Berlin_AV", role_token, "BEFRISTET", f"{hours} Std"])
+        # Example (older): Berlin_AV_FLOOR SUPERVISOR_BEFRISTET_40 Std_2025.docx
+        # Example (current): ASN_AV_berlin_floor_supervisor_befristet_40.docx
+        return _pick_by_contains_fallback(base_dir, hours_required_sets)
 
     if contract_type == "befristet" and occupation == "minibar":
         # This one doesn't follow the standard naming convention.
-        return _pick_by_contains(base_dir, ["Berlin_AV_Minijob_befristet"])
+        return _pick_by_contains(base_dir, ["ASN_AV_berlin_Minijob_befristet"])
 
     if contract_type == "befristet":
-        return _pick_by_contains(base_dir, ["Berlin_AV", role_token, "BEFRISTET", f"{hours} Std"])
+        return _pick_by_contains_fallback(base_dir, hours_required_sets)
 
     # unbefristet examples:
     # Berlin_AV_HSK_UNBEFRISTET_40 Std...
     # Berlin_AV_SUPERVISOR_UNBEFRISTET_40 Std...
-    return _pick_by_contains(base_dir, ["Berlin_AV", role_token, "UNBEFRISTET", f"{hours} Std"])
+    return _pick_by_contains(base_dir, ["ASN_AV_berlin", role_token, "UNBEFRISTET", f"{hours} Std"])
 
 KOELN_GROUP_CITIES = {
     "bergisch_gladbach",
@@ -333,11 +388,22 @@ def resolve_wien_template(attrs: Dict[str, Any]) -> Path:
     if role_token is None:
         raise ValueError(f"No Wien template mapping for occupation '{occupation}'")
 
-    # Example: ASN AV_40 Std_HSK Manager_Neu.docx
-    return _pick_by_contains(base_dir, ["ASN AV", f"{weekly_hours} Std", role_token, "Neu"])
+    # Examples observed in this repo:
+    # - ASN AV_40 Std_HSK Manager.docx
+    # - ASN AV_32 Std_4 Tage-8 Std_Reinigungskraft_PA.docx
+    # - ASN_AV_wien_Reinigungskraft_20_Std_5_Tage_4_Std.docx
+    #
+    # Prefer the explicit ASN_AV_wien_* naming when present to avoid
+    # unintentionally matching a more specific variant (e.g. Reinigungskraft_TD).
+    required_sets = [
+        ["ASN_AV_wien", role_token, f"{weekly_hours}", "Std"],
+        ["ASN AV", f"{weekly_hours} Std", role_token],
+    ]
+    return _pick_by_contains_fallback(base_dir, required_sets)
 
 
 def resolve_template_path(employee) -> Path:
+    
     attrs = normalize_contract_attributes(employee)
     city = attrs["city_code"]
     
