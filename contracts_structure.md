@@ -10,31 +10,32 @@ contracts/
 │   │       ├── ASN_AV_berlin_hausmann_befristet_40.docx
 │   │       ├── ASN_AV_berlin_hsk_befristet_40.docx
 │   │       ├── ASN_AV_berlin_minibar_befristet_40.docx
+│   │       ├── ASN_AV_berlin_minijob_befristet.docx
 │   │       ├── ASN_AV_berlin_nr_befristet_40.docx
 │   │       ├── ASN_AV_berlin_public_area_befristet_40.docx
 │   │       ├── ASN_AV_berlin_reinigungskraft_befristet_40.docx
-│   │       ├── ASN_AV_berlin_stw_befristet_40.docx
-│   │       └── Berlin_AV_Minijob_befristet_aktuell.docx
+│   │       └── ASN_AV_berlin_stw_befristet_40.docx
 │   └── unbefristet/
 │       ├── VORLAGEN Unbefristet_Adlon/
-│       │   ├── berlin_AV_floor_supervisor_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_glasreiniger_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_hausmann_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_hsk_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_minibar_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_nr_unbefristet_adlon_40.docx
-│       │   ├── berlin_AV_public_area_unbefristet_adlon_40.docx
-│       │   └── berlin_AV_stw_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_floor_supervisor_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_glasreiniger_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_hausmann_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_hsk_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_minibar_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_nr_unbefristet_adlon_40.docx
+│       │   ├── ASN_AV_berlin_public_area_unbefristet_adlon_40.docx
+│       │   └── ASN_AV_berlin_stw_unbefristet_adlon_40.docx
 │       └── VORLAGEN Unbefristet_GHB/
-│           ├── berlin_AV_floor_supervisor_unbefristet_ghb_40.docx
-│           ├── berlin_AV_glasreiniger_unbefristet_ghb_40.docx
-│           ├── berlin_AV_hausmann_unbefristet_ghb_40.docx
-│           ├── berlin_AV_hsk_unbefristet_ghb_40.docx
-│           ├── berlin_AV_minibar_unbefristet_ghb_40.docx
-│           ├── berlin_AV_nr_unbefristet_ghb_40.docx
-│           └── berlin_AV_public_area_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_floor_supervisor_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_glasreiniger_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_hausmann_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_hsk_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_minibar_unbefristet_ghb_40.docx
+│           ├── ASN_AV_berlin_nr_unbefristet_ghb_40.docx
+│           └── ASN_AV_berlin_public_area_unbefristet_ghb_40.docx
 ├── berlin_template.docx
 ├── generator.py
+├── hours.py
 ├── koeln_group/
 │   ├── bergisch_gladbach/
 │   │   ├── ASN_AV_bergisch_gladbach_hausmann_befristet_40_Std_5_Tage_8_Std.docx
@@ -73,30 +74,33 @@ contracts/
 │           ├── MUC_AV_PA-BOH_UNBEFRISTET_40 Std_NEU.docx
 │           ├── MUC_AV_STW_UNBEFRISTET_40 Std_NEU.docx
 │           └── MUC_AV_SV_UNBEFRISTET_40 Std_NEU.docx
-├── registry.py
 ├── resolver.py
 ├── temp_template/
-└── wien/
-    ├── ASN AV_20 Std_5 Tage-4 Std_Reinigungskraft_TD_Neu.docx
-    ├── ASN AV_24 Std_3 Tage-8 Std_Zimmermädchen_Neu.docx
-    ├── ASN AV_25 Std_5 Tage-5 Std_Reinigungskraft_TD_Neu.docx
-    ├── ASN AV_30 Std_5 Tage-6 Std_Reinigungskraft_TD_Neu.docx
-    ├── ASN AV_30 Std_5 Tage-6 Std_Zimmermädchen_Neu.docx
-    ├── ASN AV_32 Std_4 Tage-8 Std_HSK Supervisor_Neu.docx
-    ├── ASN AV_32 Std_4 Tage-8 Std_Reinigungskraft_PA_Neu.docx
-    ├── ASN AV_32 Std_4 Tage-8 Std_Zimmermädchen_Neu.docx
-    ├── ASN AV_40 Std_Ass. HSK Manager_Neu.docx
-    ├── ASN AV_40 Std_HSK Manager_Neu.docx
-    ├── ASN AV_40 Std_HSK Supervisor_Neu.docx
-    ├── ASN AV_40 Std_Objektleitung_NR_Neu.docx
-    ├── ASN AV_40 Std_Quality Manager_Neu.docx
-    ├── ASN AV_40 Std_Reinigungskraft_HM_Neu.docx
-    ├── ASN AV_40 Std_Reinigungskraft_NR_Neu.docx
-    ├── ASN AV_40 Std_Reinigungskraft_Public_Neu.docx
-    ├── ASN AV_40 Std_Reinigungskraft_STW_NEU.docx
-    ├── ASN AV_40 Std_STW Manager_Neu.docx
-    ├── ASN AV_40 Std_STW Supervisor_Neu.docx
-    └── ASN AV_40 Std_Zimmermädchen_Neu.docx
+├── wien/
+│   ├── Antrag_Beschäftigungsbewilligung/       ← historical PDFs, not templates
+│   ├── NEU/                                     ← historical Abmeldungen/Anmeldungen PDFs
+│   ├── ASN_AV_wien_Ass_HSK_Manager_40_Std.docx
+│   ├── ASN_AV_wien_HSK_Manager_40_Std.docx
+│   ├── ASN_AV_wien_HSK_Supervisor_32_Std_4_Tage_8_Std.docx
+│   ├── ASN_AV_wien_HSK_Supervisor_40_Std.docx
+│   ├── ASN_AV_wien_Objektleitung_NR_40_Std.docx
+│   ├── ASN_AV_wien_Quality_Manager_40_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_20_Std_5_Tage_4_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_HM_40_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_NR_40_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_PA_32_Std_4_Tage_8_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_Public_40_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_STW_40_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_TD_20_Std_5_Tage_4_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_TD_25_Std_5_Tage_5_Std.docx
+│   ├── ASN_AV_wien_Reinigungskraft_TD_30_Std_5_Tage_6_Std.docx
+│   ├── ASN_AV_wien_STW_Manager_40_Std.docx
+│   ├── ASN_AV_wien_STW_Supervisor_40_Std.docx
+│   ├── ASN_AV_wien_Zimmermädchen_24_Std_3_Tage_8_Std.docx
+│   ├── ASN_AV_wien_Zimmermädchen_30_Std_5_Tage_6_Std.docx
+│   ├── ASN_AV_wien_Zimmermädchen_32_Std_4_Tage_8_Std.docx
+│   └── ASN_AV_wien_Zimmermädchen_40_Std.docx
+└── wien_template.docx
 ```
 
 This document describes the contract template organization for the `employee_onboarding_ocr` project.
@@ -105,8 +109,8 @@ This document describes the contract template organization for the `employee_onb
 
 - `contracts/`
   - Contains contract templates for different cities and contract types.
-  - Hosts the contract generation helper `generator.py`.
-  - Includes example/default template files and a temporary unpacked `.docx` template structure.
+  - Hosts the contract generation helper `generator.py` and supporting modules.
+  - Includes default template files (`berlin_template.docx`, `wien_template.docx`) and a temporary unpacked `.docx` template structure.
 
 ## Important Files
 
@@ -117,8 +121,17 @@ This document describes the contract template organization for the `employee_onb
   - Saves output to the repository `output/` directory.
   - Converts `.docx` files to PDF when needed.
 
+- `contracts/resolver.py`
+  - Resolves the correct template path from employee attributes (city, occupation, contract type, hours, etc.).
+
+- `contracts/hours.py`
+  - Helper module for working with weekly/daily hours schedules used in template resolution.
+
 - `contracts/berlin_template.docx`
-  - Default contract template used by `generate_contract_for_employee()` if no other template is specified.
+  - Default Berlin contract template used by `generate_contract_for_employee()` if no other template is specified.
+
+- `contracts/wien_template.docx`
+  - Default Wien contract template.
 
 ## City-Specific Template Folders
 
@@ -130,15 +143,17 @@ This document describes the contract template organization for the `employee_onb
   - Example files:
     - `ASN_AV_berlin_hausmann_befristet_40.docx`
     - `ASN_AV_berlin_hsk_befristet_40.docx`
+    - `ASN_AV_berlin_minijob_befristet.docx`
 
 - `unbefristet/`
   - Contains permanent (`unbefristet`) Berlin contract templates.
   - Has separate folders for template families, such as:
     - `VORLAGEN Unbefristet_Adlon/`
     - `VORLAGEN Unbefristet_GHB/`
+  - All files follow the `ASN_AV_berlin_` prefix convention.
   - Example files:
-    - `berlin_AV_hsk_unbefristet_adlon_40.docx`
-    - `berlin_AV_minibar_unbefristet_ghb_40.docx`
+    - `ASN_AV_berlin_hsk_unbefristet_adlon_40.docx`
+    - `ASN_AV_berlin_minibar_unbefristet_ghb_40.docx`
 
 ### `contracts/koeln_group/`
 
@@ -156,11 +171,15 @@ Contains contract templates for all Koeln-group cities. Each city has its own su
 
 ### `contracts/wien/`
 
-- Contains Vienna contract templates.
-- Filenames include city, contract hours, role, and a `Neu` suffix.
+- Contains Vienna contract templates (fully renamed to resolver pattern).
+- Filenames follow: `ASN_AV_wien_{occupation}_{weekly}_Std[_{days}_Tage_{daily}_Std].docx`
 - Example files:
-  - `ASN AV_40 Std_HSK Manager_Neu.docx`
-  - `ASN AV_32 Std_Zimmermädchen_Neu.docx`
+  - `ASN_AV_wien_HSK_Manager_40_Std.docx`
+  - `ASN_AV_wien_Zimmermädchen_32_Std_4_Tage_8_Std.docx`
+  - `ASN_AV_wien_Reinigungskraft_TD_25_Std_5_Tage_5_Std.docx`
+- Also contains non-template subdirectories (historical records, not used by the generator):
+  - `Antrag_Beschäftigungsbewilligung/` — archived employment permit PDFs
+  - `NEU/` — archived Abmeldungen and Anmeldungen PDFs by month (2024)
 
 ### `contracts/temp_template/`
 
@@ -171,11 +190,12 @@ Contains contract templates for all Koeln-group cities. Each city has its own su
 ## Template Filename Conventions
 
 - **Berlin befristet:** `ASN_AV_berlin_{occupation}_befristet_40.docx`
-- **Berlin unbefristet:** `berlin_AV_{occupation}_unbefristet_{subgroup}_40.docx`
+  - Minijob exception: `ASN_AV_berlin_minijob_befristet.docx` (no hours suffix)
+- **Berlin unbefristet:** `ASN_AV_berlin_{occupation}_unbefristet_{subgroup}_40.docx`
   - `{subgroup}` is either `adlon` or `ghb`
 - **Koeln group (bergisch_gladbach):** `ASN_AV_bergisch_gladbach_{occupation}_befristet_{weekly}_Std_{days}_Tage_{daily}_Std.docx`
-- **Koeln group (other cities):** `ASN_AV_{city}_{occupation}_{contract_type}_{weekly}_Std_{days}_Tage_{daily}_Std.docx` *(duesseldorf, frankfurt, hamburg, muenchen — not yet renamed)*
-- **Wien:** `ASN_AV_wien_{occupation}_{weekly}_Std_{days}_Tage_{daily}_Std.docx` *(not yet renamed)*
+- **Koeln group (other cities):** `ASN_AV_{city}_{occupation}_{contract_type}_{weekly}_Std_{days}_Tage_{daily}_Std.docx` *(duesseldorf, frankfurt, hamburg — not yet renamed)*
+- **Wien:** `ASN_AV_wien_{occupation}_{weekly}_Std[_{days}_Tage_{daily}_Std].docx` *(fully renamed)*
 
 ## Generated Output Structure
 

@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -171,6 +172,29 @@ def normalize_hours_per_day(value: Optional[Any]) -> Optional[float]:
     except (ValueError, TypeError):
         raise ValueError(f"Invalid hours per day value: {value}")
 
+
+def normalize_department(value: Optional[str]) -> Optional[str]:
+    # Department is not currently used for template resolution, 
+    # but we normalize it here in case it's needed in the future.
+    
+    raw = clean_text
+    if raw is None:
+        return None
+    
+    mapping = {
+        "reinigung": "reinigung",
+        "housekeeping/zimmermädchen": "housekeeping/zimmermaedchen",
+        "nachtrieinigung": "nachtrieinigung",
+        "hausmann-/wäschemannabteilung": "hausmann",
+        "hausmann-/waschenmannabteilung": "hausmann",
+        "public area": "public_area",
+        "stwearding/geschirrspüler-abteilung": "stw",
+        "stewarding/geschirrspueler-abteilung": "stw",
+    }
+    
+    return mapping.get(raw, raw)
+
+
 def normalize_contract_attributes(employee) -> Dict[str, Any]:
     return {
         "city_code": normalize_city(getattr(employee, "work_city", None)),
@@ -260,6 +284,35 @@ def _pick_by_contains(dir_path: Path, required_substrings: list[str]) -> Path:
         + "\nChecked:\n"
         + checked
     )
+
+def _wien_role_candidates(base_dir: Path, role_token: str) -> list[Path]:
+    role_slug = role_token.lower().replace(" ", "_").replace(".", "")
+    prefix = f"asn_av_wien_{role_slug}_"
+    return [
+        path
+        for path in sorted(base_dir.glob("*.docx"))
+        if path.stem.lower().replace(".", "").startswith(prefix)
+    ]
+
+def _wien_role_hour_candidates(base_dir: Path, role_token: str, weekly_hours: int) -> list[Path]:
+    role_slug = role_token.lower().replace(" ", "_").replace(".", "")
+    prefix = f"asn_av_wien_{role_slug}_"
+    hour_token = f"_{weekly_hours}_std"
+    return [
+        path
+        for path in sorted(base_dir.glob("*.docx"))
+        if path.stem.lower().replace(".", "").startswith(prefix)
+        and hour_token in path.stem.lower().replace(".", "")
+    ]
+
+def _extract_hours_from_filename(path: Path) -> Optional[int]:
+    match = re.search(r"_(\d+)_std", path.stem.lower())
+    if not match:
+        return None
+    try:
+        return int(match.group(1))
+    except ValueError:
+        return None
 
 def _pick_by_contains_fallback(dir_path: Path, required_options: list[list[str]]) -> Path:
     """
@@ -379,14 +432,45 @@ def resolve_wien_template(attrs: Dict[str, Any]) -> Path:
     # days_per_week and daily_hours are encoded in filenames for some Wien templates,
     # but not all are strictly needed if weekly_hours + role matches uniquely.
 
-    if weekly_hours is None:
-        raise ValueError("weekly_hours is required for Wien templates")
-
     base_dir = CONTRACTS_DIR / "wien"
 
     role_token = _WIEN_ROLE_TOKEN.get(occupation)
     if role_token is None:
         raise ValueError(f"No Wien template mapping for occupation '{occupation}'")
+
+    # Some Wien roles have exactly one template. In that case we can safely
+    # resolve without weekly_hours.
+    if weekly_hours is None:
+        role_candidates = _wien_role_candidates(base_dir, role_token)
+        if len(role_candidates) == 1:
+            return role_candidates[0]
+
+        available_hours = sorted(
+            {
+                h
+                for h in (_extract_hours_from_filename(path) for path in role_candidates)
+                if h is not None
+            }
+        )
+        if available_hours:
+            raise ValueError(
+                "weekly_hours is required for Wien templates "
+                f"for occupation '{occupation}'. Available hours: {', '.join(str(h) for h in available_hours)}"
+            )
+        raise ValueError(
+            "weekly_hours is required for Wien templates "
+            f"for occupation '{occupation}'"
+        )
+
+    hour_candidates = _wien_role_hour_candidates(base_dir, role_token, weekly_hours)
+    if len(hour_candidates) == 1:
+        return hour_candidates[0]
+    if len(hour_candidates) > 1:
+        raise FileNotFoundError(
+            "Multiple Wien templates matched for "
+            f"occupation '{occupation}' and weekly_hours '{weekly_hours}':\n"
+            + "\n".join(str(path) for path in hour_candidates)
+        )
 
     # Examples observed in this repo:
     # - ASN AV_40 Std_HSK Manager.docx

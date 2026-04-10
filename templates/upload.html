@@ -316,26 +316,6 @@
                             <label>Occupation</label>
                             <select id="occupation_select" onchange="handleOccupationChange(this)">
                                 <option value="">Choose Occupation</option>
-                                
-                                <optgroup label="Housekeeping">
-                                    <option value="HSK">HSK (Housekeeping)</option>
-                                    <option value="Zimmermädchen">Zimmermädchen</option>
-                                    <option value="Minibar">Minibar</option>
-                                </optgroup>
-                                <optgroup label="Cleaning">
-                                    <option value="Reinigungskraft">Reinigungskraft</option>
-                                    <option value="Glasreiniger">Glasreiniger</option>
-                                    <option value="Public Area">Public Area</option>
-                                    <option value="Hausmann">Hausmann</option>
-                                    <option value="STW">STW</option>
-                                    <option value="NR">NR</option>
-                                </optgroup>
-                                <optgroup label="Management">
-                                    <option value="Floor Supervisor">Floor Supervisor</option>
-                                    <option value="HSK Supervisor">HSK Supervisor</option>
-                                    <option value="HSK Manager">HSK Manager</option>
-                                </optgroup>
-                                <option value="other">Other</option>
                             </select>
                             <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." style="display:none; margin-top:4px;">
                         </div>
@@ -360,10 +340,24 @@
                             <option value="24|3|8">24 hrs / 3 days / 8 hrs/day</option><option value="25|5|5">25 hrs / 5 days / 5 hrs/day</option><option value="30|5|6">30 hrs / 5 days / 6 hrs/day</option><option value="32|4|8">32 hrs / 4 days / 8 hrs/day</option>
                             <option value="35|5|7">35 hrs / 5 days / 7 hrs/day</option><option value="40|5|8">40 hrs / 5 days / 8 hrs/day</option><option value="other">Custom</option></select></div>
                         
-                        <div class="field"><label>Weekly Hours</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" placeholder="40" disabled></div>
+                        <<div class="field">
+                            <label>Weekly Hours</label>
+                            <input type="number" id="weekly_hours" min="1" max="60" placeholder="40" readonly>
+                            <input type="hidden" name="weekly_hours" id="weekly_hours_hidden">
+                        </div>
+
+                        <div class="field">
+                            <label>Work Days/Week</label>
+                            <input type="number" id="work_days_per_week" min="1" max="7" placeholder="5" readonly>
+                            <input type="hidden" name="work_days_per_week" id="work_days_per_week_hidden">
+                        </div>
+
+                        <div class="field">
+                            <label>Hours/Day</label>
+                            <input type="number" id="daily_hours" min="1" max="24" placeholder="8" step="0.5" readonly>
+                            <input type="hidden" name="daily_hours" id="daily_hours_hidden">
+                        </div>
                         
-                        <div class="field"><label>Work Days/Week</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" placeholder="5" disabled></div>
-                        <div class="field"><label>Hours/Day</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" placeholder="8" step="0.5" disabled></div>
                         <div class="field"><label>Status</label><select name="status"><option value="draft" selected>Draft</option><option value="under_review">Under Review</option><option value="approved">Approved</option></select></div>
                         <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
                     </div>
@@ -705,6 +699,123 @@
                     preview.textContent = text;
                 }
             }
+            const CITY_OCCUPATION_OPTIONS = {
+                berlin: [
+                    { value: "HSK", label: "HSK (Housekeeping)" },
+                    { value: "Zimmermädchen", label: "Zimmermädchen" },
+                    { value: "Minibar", label: "Minibar" },
+                    { value: "Reinigungskraft", label: "Reinigungskraft" },
+                    { value: "Glasreiniger", label: "Glasreiniger" },
+                    { value: "Public Area", label: "Public Area" },
+                    { value: "Hausmann", label: "Hausmann" },
+                    { value: "STW", label: "STW" },
+                    { value: "NR", label: "NR" },
+                    { value: "Floor Supervisor", label: "Floor Supervisor" },
+                    { value: "HSK Supervisor", label: "HSK Supervisor" },
+                    { value: "HSK Manager", label: "HSK Manager" },
+                    { value: "other", label: "Other" }
+                ],
+
+                wien: [
+                    { value: "Reinigungskraft", label: "Reinigungskraft" },
+                    { value: "Reinigungskraft TD", label: "Reinigungskraft TD" },
+                    { value: "Reinigungskraft PA", label: "Reinigungskraft PA" },
+                    { value: "Reinigungskraft HM", label: "Reinigungskraft HM" },
+                    { value: "Reinigungskraft NR", label: "Reinigungskraft NR" },
+                    { value: "Reinigungskraft Public", label: "Reinigungskraft Public" },
+                    { value: "Reinigungskraft STW", label: "Reinigungskraft STW" },
+                    { value: "Zimmermädchen", label: "Zimmermädchen" },
+                    { value: "HSK Supervisor", label: "HSK Supervisor" },
+                    { value: "HSK Manager", label: "HSK Manager" },
+                    { value: "Ass. HSK Manager", label: "Ass. HSK Manager" },
+                    { value: "STW Supervisor", label: "STW Supervisor" },
+                    { value: "STW Manager", label: "STW Manager" },
+                    { value: "Objektleitung NR", label: "Objektleitung NR" },
+                    { value: "Quality Manager", label: "Quality Manager" },
+                    { value: "other", label: "Other" }
+                ],
+
+                bergisch_gladbach: [
+                    { value: "Hausmann", label: "Hausmann" },
+                    { value: "HSK", label: "HSK" },
+                    { value: "HSK Supervisor", label: "HSK Supervisor" },
+                    { value: "NR", label: "NR" },
+                    { value: "other", label: "Other" }
+                ],
+
+                duesseldorf: [
+                    { value: "NR", label: "NR" },
+                    { value: "STW", label: "STW" },
+                    { value: "other", label: "Other" }
+                ],
+
+                frankfurt: [
+                    { value: "NR", label: "NR" },
+                    { value: "Public Area", label: "Public Area" },
+                    { value: "other", label: "Other" }
+                ],
+
+                hamburg: [
+                    { value: "NR", label: "NR" },
+                    { value: "Public Area", label: "Public Area" },
+                    { value: "other", label: "Other" }
+                ]
+            };
+            function normalizeCityForOptions(rawCity) {
+                const city = (rawCity || '').trim().toLowerCase();
+
+                const map = {
+                    'berlin': 'berlin',
+                    'wien': 'wien',
+                    'vienna': 'wien',
+                    'bergisch gladbach': 'bergisch_gladbach',
+                    'düsseldorf': 'duesseldorf',
+                    'dusseldorf': 'duesseldorf',
+                    'duesseldorf': 'duesseldorf',
+                    'frankfurt': 'frankfurt',
+                    'hamburg': 'hamburg'
+                };
+
+                return map[city] || null;
+            }
+            
+            function populateOccupationOptions(cityKey) {
+                const occupationSelect = byId('occupation_select');
+                const occupationInput = byId('occupation_input');
+                if (!occupationSelect || !occupationInput) return;
+
+                const options = CITY_OCCUPATION_OPTIONS[cityKey] || [
+                    { value: "", label: "Choose Occupation" },
+                    { value: "other", label: "Other" }
+                ];
+
+                const currentValue = occupationInput.value || occupationSelect.value || '';
+
+                occupationSelect.innerHTML = '';
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Choose Occupation';
+                occupationSelect.appendChild(defaultOption);
+
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    occupationSelect.appendChild(option);
+                });
+
+                const matching = options.find(opt => opt.value === currentValue);
+                if (matching) {
+                    occupationSelect.value = matching.value;
+                    occupationInput.style.display = 'none';
+                    occupationInput.value = matching.value;
+                } else {
+                    occupationSelect.value = '';
+                    occupationInput.value = '';
+                    occupationInput.style.display = 'none';
+                }
+            }
 
             window.handleWorkCityChange = function(select) {
                 const input = byId('work_city_input');
@@ -779,6 +890,15 @@
 
                 window.updateContractPreview();
             };
+            function syncScheduleHiddenFields(){
+                const weekly = byId('weekly_hours')?.value || '';
+                const days = byId('work_days_per_week')?.value || '';
+                const daily = byId('daily_hours')?.value || '';
+
+                if (byId('weekly_hours_hidden')) byId('weekly_hours_hidden').value = weekly;
+                if (byId('work_days_per_week_hidden')) byId('work_days_per_week_hidden').value = days;
+                if (byId('daily_hours_hidden')) byId('daily_hours_hidden').value = daily;
+            }
 
             window.applySchedulePreset = function(select) {
                 const weeklyInput = byId('weekly_hours');
@@ -788,9 +908,9 @@
                 if (!weeklyInput || !daysInput || !dailyInput || !contractSelect) return;
 
                 if (select.value === 'other') {
-                    weeklyInput.disabled = false;
-                    daysInput.disabled = false;
-                    dailyInput.disabled = false;
+                    weeklyInput.readOnly  = false;
+                    daysInput.readOnly  = false;
+                    dailyInput.readOnly  = false;
                     contractSelect.disabled = false;
                     weeklyInput.style.opacity = '1';
                     daysInput.style.opacity = '1';
@@ -801,25 +921,25 @@
                     weeklyInput.value = weekly;
                     daysInput.value = days;
                     dailyInput.value = daily;
-                    weeklyInput.disabled = true;
-                    daysInput.disabled = true;
-                    dailyInput.disabled = true;
+                    weeklyInput.readOnly  = true;
+                    daysInput.readOnly  = true;
+                    dailyInput.readOnly  = true;
                     contractSelect.disabled = true;
                     weeklyInput.style.opacity = '0.5';
                     daysInput.style.opacity = '0.5';
                     dailyInput.style.opacity = '0.5';
                     contractSelect.style.opacity = '0.5';
                 } else {
-                    weeklyInput.disabled = true;
-                    daysInput.disabled = true;
-                    dailyInput.disabled = true;
+                    weeklyInput.readOnly  = true;
+                    daysInput.readOnly  = true;
+                    dailyInput.readOnly  = true;
                     contractSelect.disabled = true;
                     weeklyInput.style.opacity = '0.5';
                     daysInput.style.opacity = '0.5';
                     dailyInput.style.opacity = '0.5';
                     contractSelect.style.opacity = '0.5';
                 }
-
+                syncScheduleHiddenFields();
                 window.updateContractPreview();
             };
 
@@ -833,6 +953,7 @@
                     const daily = weekly / days;
                     dailyInput.value = Number.isInteger(daily) ? String(daily) : daily.toFixed(1);
                 }
+                syncScheduleHiddenFields();
             };
 
             window.handleContractDurationChange = function(select) {
@@ -1021,9 +1142,10 @@
                 if (schedulePreset) {
                     schedulePreset.addEventListener('change', window.updateContractPreview);
                 }
-
+                syncScheduleHiddenFields();
                 window.updateContractPreview();
             }
+            
 
             initPreviewBindings();
         })();
