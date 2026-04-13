@@ -805,6 +805,8 @@
                     occupationSelect.appendChild(option);
                 });
 
+
+                /*Is the previously selected occupation still inside the newly allowed list*/
                 const matching = options.find(opt => opt.value === currentValue);
                 if (matching) {
                     occupationSelect.value = matching.value;
@@ -816,6 +818,108 @@
                     occupationInput.style.display = 'none';
                 }
             }
+            const CITY_ROLE_SCHEDULES ={
+
+                wien: {
+                    'reinigungskraft': ['20|5|4'],
+                    'reinigungskraft td': ['20|5|4', '25|5|5', '30|5|6'],
+                    'reinigungskraft pa': ['32|4|8'],
+                    'reinigungskraft hm': ['40|5|8'],
+                    'reinigungskraft nr': ['40|5|8'],
+                    'reinigungskraft public': ['40|5|8'],
+                    'reinigungskraft stw': ['40|5|8'],
+                    'zimmermädchen': ['24|3|8', '30|5|6', '32|4|8', '40|5|8'],
+                    'hsk supervisor': ['32|4|8', '40|5|8'],
+                    'hsk manager': ['40|5|8'],
+                    'ass. hsk manager': ['40|5|8'],
+                    'stw supervisor': ['40|5|8'],
+                    'stw manager': ['40|5|8'],
+                    'objektleitung nr': ['40|5|8'],
+                    'quality manager': ['40|5|8']
+                }
+            };
+
+            const ALL_SCHEDULE_PRESET = {
+                { value: '', label: 'Choose Preset' }
+                { value: '20|5|4', label: '20 hrs/5days/4hrs/day'},
+                { value: '24|3|8', label: '24 hrs / 3 days / 8 hrs/day' },
+                { value: '25|5|5', label: '25 hrs / 5 days / 5 hrs/day' },
+                { value: '30|5|6', label: '30 hrs / 5 days / 6 hrs/day' },
+                { value: '32|4|8', label: '32 hrs / 4 days / 8 hrs/day' },
+                { value: '35|5|7', label: '35 hrs / 5 days / 7 hrs/day' },
+                { value: '40|5|8', label: '40 hrs / 5 days / 8 hrs/day' },
+                { value: 'other', label: 'Custom' }
+            };
+            
+
+            /* Updates the schedule dropdown based on selected city and occupation */
+            function updateScheduleOptionsForSelection(){
+                const cityRaw = byId('work_city_input')?.value || '';
+                const OccupationRaq = byId('occupation_input')?.value || '';
+                const presentSelect = byId('schedule_present');
+
+                if (!presentSelect) return;
+
+                const cityKey = normalizeCityForOptions(cityRaw);
+                const occupationKey  = occupationRaw.trim().toLowerCase();
+
+                let allowed = null;
+
+                if (cityKey && CITY_ROLE_SCHEDULES[cityKey] && CITY_ROLE_SCHEDULES[cityKey][occupationKey]) {
+                allowed = CITY_ROLE_SCHEDULES[cityKey][occupationKey];
+                }
+
+                const previousValue = presetSelect.value;
+                presetSelect.innerHTML = '';
+
+                let filteredOptions = ALL_SCHEDULE_PRESETS;
+
+                if (allowed) {
+                    filteredOptions = ALL_SCHEDULE_PRESETS.filter(opt => {
+                        return opt.value === '' || opt.value === 'other' || allowed.includes(opt.value);
+                    });
+                }
+
+                filteredOptions.forEach ( opt=> {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    presentSelect.appendChild(option);
+                });
+                
+
+                /*checks whether the previously selected preset still exists in newly allowed options */
+                const stillValid = filteredOptions.some( opt => opt.value === previousValue);
+                presetSelect.value = stillValid ? previousValue : '';
+
+                if (! stillValid) {
+                    const weeklyInput = byId('weekly_hours');
+                    const daysInput = byId('work_days_per_week');
+                    const dailyInput = byId('daily_hours');
+
+                    if (weeklyInput) weeklyInput.value = '';
+                    if (daysInput) daysInput.value = '';
+                    if (dailyInput) dailyInput.value = '';
+                }
+            }
+
+
+
+            /* Why the function matters so much
+
+                This function is now the trigger for the entire chain.
+
+                When city changes, it causes:
+
+                city input update
+                hotel logic update
+                occupation dropdown rebuild
+                schedule preset filtering
+                contract preview refresh
+
+                So city is now the top-level controller.
+
+                That is exactly how it should be.   */
 
             window.handleWorkCityChange = function(select) {
                 const input = byId('work_city_input');
@@ -832,19 +936,32 @@
                     input.value = select.value;
                 }
 
-                const isBerlin = select.value.toLowerCase() === 'berlin';
+                const selectedCity = (select.value || '').toLowerCase();
+                const isBerlin = selectedCity === 'berlin';
+
                 if (hotelSelect) {
                     hotelSelect.disabled = false;
                     hotelSelect.style.opacity = '1';
                     Array.from(hotelSelect.options).forEach(opt => {
                         opt.disabled = !isBerlin && opt.value !== 'other' && opt.value !== '';
                     });
+
                     if (!isBerlin) {
                         hotelSelect.value = '';
-                        if (hotelInput) { hotelInput.style.display = 'none'; hotelInput.value = ''; }
+                        if (hotelInput) {
+                            hotelInput.style.display = 'none';
+                            hotelInput.value = '';
+                        }
                     }
                 }
 
+                /* Take chosen city and convert it to standard key like wien, berlin, etc.*/
+                const cityKey = normalizeCityForOptions(input.value);
+
+                /*Rebuild occupation dropdown based on chosen city.*/
+                populateOccupationOptions(cityKey);
+                /* Update  schedule options depending on the selected occupdation and city*/
+                updateScheduleOptionsForSelection();
                 window.updateContractPreview();
             };
 
@@ -852,6 +969,9 @@
                 const input = byId('occupation_input');
                 const deptField = byId('department_field');
                 const deptSelect = byId('department_select');
+                const cityRaw = byId('work_city_input')?.value || '';
+                const cityKey = normalizeCityForOptions(cityRaw);
+                
                 if (!input || !deptField || !deptSelect) return;
 
                 if (select.value === 'other') {
@@ -860,6 +980,7 @@
                     input.focus();
                     deptField.style.display = 'none';
                     deptSelect.value = '';
+
                 } else {
                     input.style.display = 'none';
                     input.value = select.value;
@@ -870,7 +991,7 @@
                         deptSelect.value = '';
                     }
                 }
-
+                updateScheduleOptionsForSelection();
                 window.updateContractPreview();
             };
 
