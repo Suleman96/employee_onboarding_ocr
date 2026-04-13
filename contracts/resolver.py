@@ -268,6 +268,28 @@ _WIEN_ROLE_TOKEN = {
     "quality_manager": "Quality Manager",
 }
 
+CITY_ROLE_SCHEDULE_RULES = {
+    "wien": {
+        "reinigungskraft": [(20, 5, 4)],
+        "reinigungskraft_td": [(20, 5, 4), (25, 5, 5), (30, 5, 6)],
+        "reinigungskraft_pa": [(32, 4, 8)],
+        "reinigungskraft_hm": [(40, 5, 8)],
+        "reinigungskraft_nr": [(40, 5, 8)],
+        "reinigungskraft_public": [(40, 5, 8)],
+        "reinigungskraft_stw": [(40, 5, 8)],
+        "zimmermaedchen": [(24, 3, 8), (30, 5, 6), (32, 4, 8), (40, 5, 8)],
+        "hsk_supervisor": [(32, 4, 8), (40, 5, 8)],
+        "hsk_manager": [(40, 5, 8)],
+        "ass_hsk_manager": [(40, 5, 8)],
+        "stw_supervisor": [(40, 5, 8)],
+        "stw_manager": [(40, 5, 8)],
+        "objektleitung_nr": [(40, 5, 8)],
+        "quality_manager": [(40, 5, 8)],
+    }
+}
+
+
+
 def _pick_by_contains(dir_path: Path, required_substrings: list[str]) -> Path:
     candidates = sorted(dir_path.glob("*.docx"))
     for path in candidates:
@@ -334,6 +356,7 @@ def _pick_by_contains_fallback(dir_path: Path, required_options: list[list[str]]
     raise FileNotFoundError(f"No matching template found in {dir_path}")
 
 def _require(value: Any, field: str) -> Any:
+    
     if value is None or value == "":
         raise ValueError(f"{field} is required to resolve a contract template")
     return value

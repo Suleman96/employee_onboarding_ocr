@@ -214,7 +214,7 @@
     <div class="top-bar">
         <h1>Employee Onboarding Dashboard</h1>
         <div class="top-actions">
-            <button class="dim-toggle" onclick="document.body.classList.toggle('dim');this.textContent=document.body.classList.contains('dim')?'☀ Bright':'🌙 Dim'">🌙 Dim</button>
+            <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
             <a href="/upload" class="btn btn-primary">+ New Employee</a>
         </div>
     </div>
@@ -274,5 +274,23 @@
         <a href="/audit-logs" class="btn btn-audit">Audit Logs</a>
         <a href="/upload" class="btn btn-secondary">+ New Employee</a>
     </div>
+
+    <script>
+        // ── Shared dim mode (synced via localStorage with upload.html) ──
+        function applyDim(on) {
+            document.body.classList.toggle('dim', on);
+            const btn = document.getElementById('dimToggle');
+            if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+        }
+
+        function toggleDim() {
+            const next = !document.body.classList.contains('dim');
+            localStorage.setItem('dimMode', next ? '1' : '0');
+            applyDim(next);
+        }
+
+        // Apply saved preference on load
+        applyDim(localStorage.getItem('dimMode') === '1');
+    </script>
 </body>
 </html>
