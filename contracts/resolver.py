@@ -251,32 +251,22 @@ _KOELN_GROUP_ROLE_TOKEN = {
 }
 
 _WIEN_ROLE_TOKEN = {
-    "reinigungskraft": "Reinigungskraft",
-    "reinigungskraft_td": "Reinigungskraft TD",
+    # No plain "Reinigungskraft" Wien file exists; the 20h/5-day/4h template is the TD variant.
+    "reinigungskraft": "Reinigungskraft_TD",
     "reinigungskraft_td": "Reinigungskraft_TD",
-
-
-    "reinigungskraft_pa": "Reinigungskraft PA",
     "reinigungskraft_pa": "Reinigungskraft_PA",
-    "reinigungskraft_hm": "Reinigungskraft HM",
-    "reinigungskraft_hm": "Reinigungskraft HM",
-
-    "reinigungskraft_nr": "Reinigungskraft NR",
+    "reinigungskraft_hm": "Reinigungskraft_HM",
     "reinigungskraft_nr": "Reinigungskraft_NR",
     "reinigungskraft_public": "Reinigungskraft_Public",
-    "reinigungskraft_public": "Reinigungskraft Public",
-
-    "reinigungskraft_stw": "Reinigungskraft STW",
     "reinigungskraft_stw": "Reinigungskraft_STW",
-
     "zimmermaedchen": "Zimmermädchen",
-    "hsk_supervisor": "HSK Supervisor",
-    "hsk_manager": "HSK Manager",
-    "ass_hsk_manager": "Ass. HSK Manager",
-    "stw_supervisor": "STW Supervisor",
-    "stw_manager": "STW Manager",
-    "objektleitung_nr": "Objektleitung NR",
-    "quality_manager": "Quality Manager",
+    "hsk_supervisor": "HSK_Supervisor",
+    "hsk_manager": "HSK_Manager",
+    "ass_hsk_manager": "Ass_HSK_Manager",
+    "stw_supervisor": "STW_Supervisor",
+    "stw_manager": "STW_Manager",
+    "objektleitung_nr": "Objektleitung_NR",
+    "quality_manager": "Quality_Manager",
 }
 
 CITY_ROLE_SCHEDULE_RULES = {
@@ -389,16 +379,15 @@ def validate_contract_selection(attrs: Dict[str, Any]) -> None:
     if not city_rules:
         return # no special validation for this city 
     
-    allowed_combinations  = city_rules.get(occupation)
+    allowed_combinations = city_rules.get(occupation)
     if not allowed_combinations:
         raise ValueError(
-            f"weekly_hours is required for city '{city}' and occupation '{occupation}'"
+            f"Occupation '{occupation}' is not supported for city '{city}'"
         )
     if weekly_hours is None:
         available_hours = sorted({combo[0] for combo in allowed_combinations})
         raise ValueError(
-            
-            f"weekly_hours is reuired for city '{city}' and occupation '{occupation}'."
+            f"weekly_hours is required for city '{city}' and occupation '{occupation}'. "
             f"Available hours: {', '.join(str(h) for h in available_hours)}"
         )
         
@@ -484,10 +473,14 @@ def resolve_berlin_template(attrs: Dict[str, Any]) -> Path:
     if contract_type == "befristet":
         return _pick_by_contains_fallback(base_dir, hours_required_sets)
 
-    # unbefristet examples:
-    # Berlin_AV_HSK_UNBEFRISTET_40 Std...
-    # Berlin_AV_SUPERVISOR_UNBEFRISTET_40 Std...
-    return _pick_by_contains(base_dir, ["ASN_AV_berlin", role_token, "UNBEFRISTET", f"{hours} Std"])
+    # unbefristet files use _40 suffix (no "Std"), e.g.:
+    # ASN_AV_berlin_hsk_unbefristet_adlon_40.docx
+    # Fall back from the older "40 Std" convention to the current "_40" convention.
+    hours_unbefristet_sets = [
+        ["ASN_AV_berlin", role_token, "UNBEFRISTET", f"{hours} Std"],
+        ["ASN_AV_berlin", role_token, "UNBEFRISTET", f"_{hours}"],
+    ]
+    return _pick_by_contains_fallback(base_dir, hours_unbefristet_sets)
 
 KOELN_GROUP_CITIES = {
     "bergisch_gladbach",
@@ -576,6 +569,13 @@ def resolve_wien_template(attrs: Dict[str, Any]) -> Path:
             daily_token = f"_{int(float(daily_hours))}_std"
             if day_token in stem and daily_token in stem:
                 narrowed.append(path)
+                #If:
+                #days_per_week = 5
+                #daily_hours = 5.0
+
+                #Then:
+                #day_token = "_5_tage_"
+                #daily_token = "_5_std"
 
         if len(narrowed) == 1:
             return narrowed[0]

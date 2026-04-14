@@ -132,6 +132,12 @@
             cursor: not-allowed;
         }
 
+        input[readonly] {
+            background: #f0f4f8;
+            color: var(--color-text-light);
+            cursor: default;
+        }
+
         input:focus, select:focus {
             outline: none;
             border-color: var(--color-primary-accent);
@@ -318,51 +324,44 @@
                             <label>Hotel Name</label>
                             <select id="hotel_name_select" name="hotel_name_select" onchange="handleHotelNameChange(this)">
                                 <option value="">Choose Hotel</option>
-                                <option value="Hotel Adlon Kempinski">Adlon Hotel Berlin</option>
+                                <option value="Hotel Adlon Kempinski">Hotel Adlon Kempinski</option>
                                 <option value="Grand Hyatt Berlin">Grand Hyatt Berlin</option>
                                 <option value="China Club Berlin">China Club Berlin</option>
                                 <option value="Kontor Haus">Kontor Haus</option>
                                 <option value="Linden Palais">Linden Palais</option>
                                 <option value="Pressehaus Podium">Pressehaus Podium</option>
-                                <option value="other" {% if employee.hotel_name and employee.hotel_name not in ["Adlon Hotel Berlin", "Grand Hyatt Berlin", "China Club Berlin", "Kontor Haus", "Linden Palais", "Pressehaus Podium"] %}selected{% endif %}>Other</option>
+                                <option value="other">Other</option>
                             </select>
-                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." value="{{ employee.hotel_name if employee.hotel_name not in ['Adlon Hotel Berlin', 'Grand Hyatt Berlin', 'China Club Berlin', 'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'] else '' }}" style="display:none; margin-top:4px;">
+                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." value="{{ employee.hotel_name or '' }}" style="display:none; margin-top:4px;">
                         </div>
                         <div class="field">
                             <label>Occupation</label>
                             <select id="occupation_select" onchange="handleOccupationChange(this)">
                                 <option value="">Choose Occupation</option>
-                                
-                                <optgroup label="Housekeeping">
-                                    <option value="HSK" {% if employee.occupation == "HSK" %}selected{% endif %}>HSK (Housekeeping)</option>
-                                    <option value="Zimmermädchen" {% if employee.occupation == "Zimmermädchen" %}selected{% endif %}>Zimmermädchen</option>
-                                    <option value="Minibar" {% if employee.occupation == "Minibar" %}selected{% endif %}>Minibar</option>
-                                </optgroup>
-                                <optgroup label="Cleaning / Facility">
-                                    <option value="Reinigungskraft" {% if employee.occupation == "Reinigungskraft" %}selected{% endif %}>Reinigungskraft</option>
-                                    <option value="Glasreiniger" {% if employee.occupation == "Glasreiniger" %}selected{% endif %}>Glasreiniger</option>
-                                    <option value="Public Area" {% if employee.occupation == "Public Area" %}selected{% endif %}>Public Area</option>
-                                    <option value="Hausmann" {% if employee.occupation == "Hausmann" %}selected{% endif %}>Hausmann</option>
-                                    <option value="STW" {% if employee.occupation == "STW" %}selected{% endif %}>STW</option>
-                                    <option value="NR" {% if employee.occupation == "NR" %}selected{% endif %}>NR</option>
-                                </optgroup>
-                                <optgroup label="Supervision / Management">
-                                    <option value="Floor Supervisor" {% if employee.occupation == "Floor Supervisor" %}selected{% endif %}>Floor Supervisor</option>
-                                    <option value="HSK Supervisor" {% if employee.occupation == "HSK Supervisor" %}selected{% endif %}>HSK Supervisor</option>
-                                    <option value="HSK Manager" {% if employee.occupation == "HSK Manager" %}selected{% endif %}>HSK Manager</option>
-                                </optgroup>
-                                <option value="other" {% if employee.occupation and employee.occupation not in ["HSK", "Zimmermädchen", "Minibar", "Reinigungskraft", "Glasreiniger", "Public Area", "Hausmann", "STW", "NR", "Floor Supervisor", "HSK Supervisor", "HSK Manager"] %}selected{% endif %}>Other</option>
+                                <option value="other">Other</option>
                             </select>
                             <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." value="{{ employee.occupation or '' }}" style="display:none; margin-top:4px;">
+                        </div>
+                        <div id="department-field" class="field" style="display:none;">
+                            <label>Department / Work Area</label>
+                            <select name="department" id="department">
+                                <option value="">— Select Department —</option>
+                                <option value="Reinigung">Reinigung</option>
+                                <option value="Stewarding / Geschirrspüler">Stewarding / Geschirrspüler</option>
+                                <option value="Housekeeping / Zimmerreinigung">Housekeeping / Zimmerreinigung</option>
+                                <option value="Nachtreinigung">Nachtreinigung</option>
+                                <option value="Hausmann- / Wäscheabteilung">Hausmann- / Wäscheabteilung</option>
+                                <option value="Public Area">Public Area</option>
+                            </select>
                         </div>
                         <div class="field"><label>Employment Type</label><select name="employment_type"><option value="">Choose</option><option value="Vollzeit" {% if employee.employment_type == "Vollzeit" %}selected{% endif %}>Vollzeit (Full-time)</option><option value="Teilzeit" {% if employee.employment_type == "Teilzeit" %}selected{% endif %}>Teilzeit (Part-time)</option><option value="Minijob" {% if employee.employment_type == "Minijob" %}selected{% endif %}>Minijob</option></select></div>
                         <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" value="{{ employee.start_date or '' }}" onchange="autoFillEndDate()"></div>
                         <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date" value="{{ employee.end_date or '' }}"></div>
                         <div class="field"><label>Contract Type</label><select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)"><option value="temporary" {% if employee.contract_type != "permanent" %}selected{% endif %}>Temporary</option><option value="permanent" {% if employee.contract_type == "permanent" %}selected{% endif %}>Permanent</option></select></div>
                         <div class="field"><label>Work Schedule Preset</label><select id="schedule_preset" onchange="applySchedulePreset(this)"><option value="">Choose Preset</option><option value="20|5|4">20 hrs / 5 days / 4 hrs/day</option><option value="24|3|8">24 hrs / 3 days / 8 hrs/day</option><option value="25|5|5">25 hrs / 5 days / 5 hrs/day</option><option value="30|5|6">30 hrs / 5 days / 6 hrs/day</option><option value="32|4|8">32 hrs / 4 days / 8 hrs/day</option><option value="35|5|7">35 hrs / 5 days / 7 hrs/day</option><option value="40|5|8">40 hrs / 5 days / 8 hrs/day</option><option value="other">Custom</option></select></div>
-                        <div class="field"><label>Weekly Hours</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" step="0.5" value="{{ employee.weekly_hours or '' }}" placeholder="40" disabled></div>
-                        <div class="field"><label>Work Days/Week</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" value="{{ employee.work_days_per_week or '' }}" placeholder="5" disabled></div>
-                        <div class="field"><label>Hours/Day</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" step="0.5" value="{{ employee.daily_hours or '' }}" placeholder="8" disabled></div>
+                        <div class="field"><label>Weekly Hours</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" step="0.5" value="{{ employee.weekly_hours or '' }}" placeholder="40" readonly></div>
+                        <div class="field"><label>Work Days/Week</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" value="{{ employee.work_days_per_week or '' }}" placeholder="5" readonly></div>
+                        <div class="field"><label>Hours/Day</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" step="0.5" value="{{ employee.daily_hours or '' }}" placeholder="8" readonly></div>
                         <div class="field"><label>Status</label><select name="status"><option value="draft" {% if employee.status == "draft" %}selected{% endif %}>Draft</option><option value="under_review" {% if employee.status == "under_review" %}selected{% endif %}>Under Review</option><option value="approved" {% if employee.status == "approved" %}selected{% endif %}>Approved</option></select></div>
                         <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id" value="{{ employee.ordio_id or '' }}"></div>
                     </div>
@@ -403,10 +402,168 @@
         <option value="Swiss"></option>
     </datalist>
     <script>
-        const KNOWN_CITIES = ["Berlin", "Köln", "Wien", "Frankfurt", "Hamburg", "Düsseldorf"];
+        // ── Data ─────────────────────────────────────────────────────────────────
+        const CITY_OCCUPATION_OPTIONS = {
+            berlin: [
+                'HSK', 'Zimmermädchen', 'Minibar', 'Reinigungskraft',
+                'Glasreiniger', 'Public Area', 'Hausmann', 'STW', 'NR',
+                'Floor Supervisor', 'HSK Supervisor', 'HSK Manager', 'other'
+            ],
+            wien: [
+                'Reinigungskraft', 'Reinigungskraft TD', 'Reinigungskraft PA',
+                'Reinigungskraft HM', 'Reinigungskraft NR', 'Reinigungskraft Public',
+                'Reinigungskraft STW', 'Zimmermädchen', 'HSK Supervisor', 'HSK Manager',
+                'Ass. HSK Manager', 'STW Supervisor', 'STW Manager',
+                'Objektleitung NR', 'Quality Manager', 'other'
+            ],
+            bergisch_gladbach: ['Hausmann', 'HSK', 'HSK Supervisor', 'NR', 'other'],
+            duesseldorf: ['NR', 'STW', 'other'],
+            frankfurt: ['NR', 'Public Area', 'other'],
+            hamburg: ['NR', 'Public Area', 'other'],
+        };
 
+        const CITY_ROLE_SCHEDULES = {
+            wien: {
+                'Reinigungskraft':        ['20|5|4'],
+                'Reinigungskraft TD':     ['20|5|4', '25|5|5', '30|5|6'],
+                'Reinigungskraft PA':     ['32|4|8'],
+                'Reinigungskraft HM':     ['40|5|8'],
+                'Reinigungskraft NR':     ['40|5|8'],
+                'Reinigungskraft Public': ['40|5|8'],
+                'Reinigungskraft STW':    ['40|5|8'],
+                'Zimmermädchen':          ['24|3|8', '30|5|6', '32|4|8', '40|5|8'],
+                'HSK Supervisor':         ['32|4|8', '40|5|8'],
+                'HSK Manager':            ['40|5|8'],
+                'Ass. HSK Manager':       ['40|5|8'],
+                'STW Supervisor':         ['40|5|8'],
+                'STW Manager':            ['40|5|8'],
+                'Objektleitung NR':       ['40|5|8'],
+                'Quality Manager':        ['40|5|8'],
+            }
+        };
+
+        const ALL_SCHEDULE_PRESETS = [
+            { value: '20|5|4', label: '20 hrs / 5 days / 4 hrs/day' },
+            { value: '24|3|8', label: '24 hrs / 3 days / 8 hrs/day' },
+            { value: '25|5|5', label: '25 hrs / 5 days / 5 hrs/day' },
+            { value: '30|5|6', label: '30 hrs / 5 days / 6 hrs/day' },
+            { value: '32|4|8', label: '32 hrs / 4 days / 8 hrs/day' },
+            { value: '35|5|7', label: '35 hrs / 5 days / 7 hrs/day' },
+            { value: '40|5|8', label: '40 hrs / 5 days / 8 hrs/day' },
+        ];
+
+        const KNOWN_HOTELS = [
+            'Hotel Adlon Kempinski', 'Grand Hyatt Berlin', 'China Club Berlin',
+            'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'
+        ];
+
+        const KNOWN_CITIES_LIST = ['Bergisch Gladbach', 'Berlin', 'Düsseldorf', 'Frankfurt', 'Hamburg', 'Köln', 'Wien'];
+
+        // ── Helpers ───────────────────────────────────────────────────────────────
+        function normalizeCityForOptions(city) {
+            const c = (city || '').trim().toLowerCase();
+            if (c === 'berlin') return 'berlin';
+            if (c === 'wien' || c === 'vienna') return 'wien';
+            if (c === 'bergisch gladbach' || c === 'bergisch_gladbach') return 'bergisch_gladbach';
+            if (c === 'düsseldorf' || c === 'dusseldorf' || c === 'duesseldorf') return 'duesseldorf';
+            if (c === 'frankfurt') return 'frankfurt';
+            if (c === 'hamburg') return 'hamburg';
+            return null;
+        }
+
+        // ── Occupation ────────────────────────────────────────────────────────────
+        function populateOccupationOptions(cityKey) {
+            const select = document.getElementById('occupation_select');
+            const occInput = document.getElementById('occupation_input');
+            const currentVal = occInput.value.trim();
+            const allowed = CITY_OCCUPATION_OPTIONS[cityKey] || ['other'];
+
+            select.innerHTML = '<option value="">Choose Occupation</option>';
+            for (const occ of allowed) {
+                const opt = document.createElement('option');
+                opt.value = occ;
+                opt.textContent = occ === 'other' ? 'Other' : occ;
+                select.appendChild(opt);
+            }
+
+            // Restore selection if still valid in new city
+            if (currentVal && allowed.includes(currentVal)) {
+                select.value = currentVal;
+                occInput.style.display = 'none';
+            } else if (currentVal) {
+                select.value = 'other';
+                occInput.style.display = 'block';
+            } else {
+                occInput.style.display = 'none';
+            }
+
+            // Sync department visibility
+            _syncDepartment(select.value);
+        }
+
+        function _syncDepartment(occupationValue) {
+            const deptField = document.getElementById('department-field');
+            if (!deptField) return;
+            const showDept = occupationValue === 'Reinigungskraft';
+            deptField.style.display = showDept ? 'flex' : 'none';
+            if (!showDept) {
+                const deptSelect = document.getElementById('department');
+                if (deptSelect) deptSelect.value = '';
+            }
+        }
+
+        // ── Schedule presets ──────────────────────────────────────────────────────
+        function updateScheduleOptionsForSelection() {
+            const citySelect = document.getElementById('work_city_select');
+            const cityInput = document.getElementById('work_city_input');
+            const occInput = document.getElementById('occupation_input');
+            const presetSelect = document.getElementById('schedule_preset');
+
+            const cityRaw = citySelect.value === 'other' ? cityInput.value : citySelect.value;
+            const cityKey = normalizeCityForOptions(cityRaw);
+            const occupation = occInput.value.trim();
+            const currentPreset = presetSelect.value;
+
+            const cityRules = CITY_ROLE_SCHEDULES[cityKey];
+            const allowedPresets = cityRules ? (cityRules[occupation] || null) : null;
+
+            presetSelect.innerHTML = '<option value="">Choose Preset</option>';
+            const presetsToShow = allowedPresets
+                ? ALL_SCHEDULE_PRESETS.filter(p => allowedPresets.includes(p.value))
+                : ALL_SCHEDULE_PRESETS;
+
+            for (const p of presetsToShow) {
+                const opt = document.createElement('option');
+                opt.value = p.value;
+                opt.textContent = p.label;
+                presetSelect.appendChild(opt);
+            }
+            const customOpt = document.createElement('option');
+            customOpt.value = 'other';
+            customOpt.textContent = 'Custom';
+            presetSelect.appendChild(customOpt);
+
+            const stillValid = [...presetSelect.options].some(o => o.value === currentPreset);
+            if (stillValid && currentPreset) {
+                presetSelect.value = currentPreset;
+            } else if (currentPreset && currentPreset !== '') {
+                // Preset no longer valid — clear schedule fields
+                presetSelect.value = '';
+                const wh = document.getElementById('weekly_hours');
+                const dpw = document.getElementById('work_days_per_week');
+                const dh = document.getElementById('daily_hours');
+                wh.value = ''; wh.readOnly = true; wh.style.opacity = '0.75';
+                dpw.value = ''; dpw.readOnly = true; dpw.style.opacity = '0.75';
+                dh.value = ''; dh.readOnly = true; dh.style.opacity = '0.75';
+            }
+        }
+
+        // ── City change ───────────────────────────────────────────────────────────
         function handleWorkCityChange(select) {
             const input = document.getElementById('work_city_input');
+            const hotelSelect = document.getElementById('hotel_name_select');
+            const hotelInput = document.getElementById('hotel_name_input');
+
             if (select.value === 'other') {
                 input.style.display = 'block';
                 input.value = '';
@@ -415,8 +572,23 @@
                 input.style.display = 'none';
                 input.value = select.value;
             }
+
+            // Hotel: Berlin-only
+            const isBerlin = select.value.toLowerCase() === 'berlin';
+            for (const opt of hotelSelect.options) {
+                if (opt.value && opt.value !== 'other') opt.disabled = !isBerlin;
+            }
+            if (!isBerlin) {
+                hotelSelect.value = '';
+                if (hotelInput) { hotelInput.style.display = 'none'; hotelInput.value = ''; }
+            }
+
+            const cityRaw = select.value === 'other' ? input.value : select.value;
+            populateOccupationOptions(normalizeCityForOptions(cityRaw));
+            updateScheduleOptionsForSelection();
         }
 
+        // ── Occupation change ─────────────────────────────────────────────────────
         function handleOccupationChange(select) {
             const input = document.getElementById('occupation_input');
             if (select.value === 'other') {
@@ -427,74 +599,44 @@
                 input.style.display = 'none';
                 input.value = select.value;
             }
+            _syncDepartment(select.value);
+            updateScheduleOptionsForSelection();
         }
 
+        // ── Hotel change ──────────────────────────────────────────────────────────
         function handleHotelNameChange(select) {
             const input = document.getElementById('hotel_name_input');
             if (!input) return;
             if (select.value === 'other') {
                 input.style.display = 'block';
-                if (!input.value) {
-                    input.focus();
-                }
+                if (!input.value) input.focus();
             } else {
                 input.style.display = 'none';
                 input.value = '';
             }
         }
 
+        // ── Schedule preset ───────────────────────────────────────────────────────
         function applySchedulePreset(select) {
-            const weeklyInput = document.getElementById('weekly_hours');
-            const daysInput = document.getElementById('work_days_per_week');
-            const dailyInput = document.getElementById('daily_hours');
-            const contractSelect = document.getElementById('contract_type');
+            const wh  = document.getElementById('weekly_hours');
+            const dpw = document.getElementById('work_days_per_week');
+            const dh  = document.getElementById('daily_hours');
 
             if (select.value === 'other') {
-                // Enable custom fields when "other" is selected
-                weeklyInput.disabled = false;
-                daysInput.disabled = false;
-                dailyInput.disabled = false;
-                contractSelect.disabled = false;
-                weeklyInput.style.opacity = '1';
-                daysInput.style.opacity = '1';
-                dailyInput.style.opacity = '1';
-                contractSelect.style.opacity = '1';
+                wh.readOnly = false; dpw.readOnly = false; dh.readOnly = false;
+                wh.style.opacity = '1'; dpw.style.opacity = '1'; dh.style.opacity = '1';
             } else if (select.value) {
-                // Apply preset and disable custom fields
                 const [weekly, days, daily] = select.value.split('|');
-                weeklyInput.value = weekly;
-                daysInput.value = days;
-                dailyInput.value = daily;
-                weeklyInput.disabled = true;
-                daysInput.disabled = true;
-                dailyInput.disabled = true;
-                contractSelect.disabled = true;
-                weeklyInput.style.opacity = '0.5';
-                daysInput.style.opacity = '0.5';
-                dailyInput.style.opacity = '0.5';
-                contractSelect.style.opacity = '0.5';
+                wh.value = weekly; dpw.value = days; dh.value = daily;
+                wh.readOnly = true; dpw.readOnly = true; dh.readOnly = true;
+                wh.style.opacity = '0.75'; dpw.style.opacity = '0.75'; dh.style.opacity = '0.75';
             } else {
-                // No preset selected, disable custom fields
-                weeklyInput.disabled = true;
-                daysInput.disabled = true;
-                dailyInput.disabled = true;
-                contractSelect.disabled = true;
-                weeklyInput.style.opacity = '0.5';
-                daysInput.style.opacity = '0.5';
-                dailyInput.style.opacity = '0.5';
-                contractSelect.style.opacity = '0.5';
+                wh.readOnly = true; dpw.readOnly = true; dh.readOnly = true;
+                wh.style.opacity = '0.75'; dpw.style.opacity = '0.75'; dh.style.opacity = '0.75';
             }
         }
 
-        function calcDailyHours() {
-            const weekly = parseFloat(document.getElementById('weekly_hours').value);
-            const days   = parseFloat(document.getElementById('work_days_per_week').value);
-            if (weekly > 0 && days > 0) {
-                const daily = weekly / days;
-                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
-            }
-        }
-
+        // ── Contract type ─────────────────────────────────────────────────────────
         function handleContractDurationChange(select) {
             const endDate = document.getElementById('end_date');
             if (select.value === 'permanent') {
@@ -519,86 +661,86 @@
             endDate.value = end.toISOString().split('T')[0];
         }
 
-        // Disable end date on load if contract is permanent and add event listeners
-        (function initContractDuration() {
-            const select = document.getElementById('contract_type');
-            if (select && select.value === 'permanent') {
+        // ── Init ──────────────────────────────────────────────────────────────────
+        (function init() {
+            // Contract type
+            const ctSelect = document.getElementById('contract_type');
+            if (ctSelect && ctSelect.value === 'permanent') {
                 const endDate = document.getElementById('end_date');
                 endDate.disabled = true;
                 endDate.style.opacity = '0.4';
             }
 
-            // Add event listeners for automatic calculation
-            const weeklyInput = document.getElementById('weekly_hours');
-            const daysInput = document.getElementById('work_days_per_week');
-            if (weeklyInput && daysInput) {
-                weeklyInput.addEventListener('change', calcDailyHours);
-                weeklyInput.addEventListener('input', calcDailyHours);
-                daysInput.addEventListener('change', calcDailyHours);
-                daysInput.addEventListener('input', calcDailyHours);
-            }
-        })();
+            // City
+            const citySelect = document.getElementById('work_city_select');
+            const cityInput  = document.getElementById('work_city_input');
+            const savedCity  = {{ employee.work_city | tojson }};
 
-        // Pre-select schedule preset if it matches the saved values
-        (function initSchedulePreset() {
-            const weekly = document.getElementById('weekly_hours').value;
-            const days   = document.getElementById('work_days_per_week').value;
-            const daily  = document.getElementById('daily_hours').value;
-            if (!weekly) return;
-            const key = `${weekly}|${days}|${daily}`;
-            const preset = document.getElementById('schedule_preset');
-            for (const opt of preset.options) {
-                if (opt.value === key) { preset.value = key; break; }
+            if (savedCity && KNOWN_CITIES_LIST.includes(savedCity)) {
+                citySelect.value = savedCity;
+                cityInput.value  = savedCity;
+            } else if (savedCity) {
+                citySelect.value = 'other';
+                cityInput.style.display = 'block';
+                cityInput.value = savedCity;
             }
-        })();
 
-        // Pre-populate the city dropdown from the existing saved value
-        (function initWorkCity() {
-            const input = document.getElementById('work_city_input');
-            const select = document.getElementById('work_city_select');
-            const savedCity = input.value.trim();
-            if (!savedCity) return;
-            if (KNOWN_CITIES.includes(savedCity)) {
-                select.value = savedCity;
-            } else {
-                select.value = 'other';
-                input.style.display = 'block';
+            // Hotel
+            const hotelSelect = document.getElementById('hotel_name_select');
+            const hotelInput  = document.getElementById('hotel_name_input');
+            const savedHotel  = {{ employee.hotel_name | tojson }};
+            const isBerlin    = (savedCity || '').toLowerCase() === 'berlin';
+
+            for (const opt of hotelSelect.options) {
+                if (opt.value && opt.value !== 'other') opt.disabled = !isBerlin;
             }
-        })();
+            if (savedHotel && KNOWN_HOTELS.includes(savedHotel)) {
+                hotelSelect.value = savedHotel;
+                if (hotelInput) { hotelInput.style.display = 'none'; hotelInput.value = ''; }
+            } else if (savedHotel) {
+                hotelSelect.value = 'other';
+                if (hotelInput) { hotelInput.style.display = 'block'; hotelInput.value = savedHotel; }
+            }
 
-        // Pre-populate the occupation dropdown from the existing saved value
-        (function initOccupation() {
-            const input = document.getElementById('occupation_input');
-            const select = document.getElementById('occupation_select');
-            const savedOccupation = input.value.trim();
-            if (!savedOccupation) return;
-            // Try to find it in the select options
-            let found = false;
-            for (const option of select.options) {
-                if (option.value === savedOccupation) {
-                    select.value = savedOccupation;
-                    found = true;
-                    break;
+            // Occupation — set hidden input first so populateOccupationOptions can restore it
+            const savedOccupation = {{ employee.occupation | tojson }};
+            document.getElementById('occupation_input').value = savedOccupation || '';
+            const cityKey = normalizeCityForOptions(savedCity);
+            populateOccupationOptions(cityKey);
+
+            // Department
+            const deptSelect = document.getElementById('department');
+            if (deptSelect) deptSelect.value = {{ employee.department | tojson }};
+
+            // Schedule presets — build the filtered list first
+            updateScheduleOptionsForSelection();
+
+            const savedWeekly = {{ employee.weekly_hours | tojson }};
+            const savedDays   = {{ employee.work_days_per_week | tojson }};
+            const savedDaily  = {{ employee.daily_hours | tojson }};
+            const wh  = document.getElementById('weekly_hours');
+            const dpw = document.getElementById('work_days_per_week');
+            const dh  = document.getElementById('daily_hours');
+
+            if (savedWeekly) {
+                wh.value = savedWeekly; dpw.value = savedDays || ''; dh.value = savedDaily || '';
+                const key = `${savedWeekly}|${savedDays}|${savedDaily}`;
+                const presetSelect = document.getElementById('schedule_preset');
+                let matched = false;
+                for (const opt of presetSelect.options) {
+                    if (opt.value === key) { presetSelect.value = key; matched = true; break; }
                 }
-            }
-            if (!found) {
-                select.value = 'other';
-                input.style.display = 'block';
-            }
-        })();
-
-        // Pre-populate hotel name dropdown from existing value
-        (function initHotelName() {
-            const input = document.getElementById('hotel_name_input');
-            const select = document.getElementById('hotel_name_select');
-            const savedHotel = input.value.trim();
-            if (!savedHotel) return;
-
-            if (["Adlon Hotel Berlin", "Grand Hyatt Berlin"].includes(savedHotel)) {
-                select.value = savedHotel;
+                if (matched) {
+                    wh.readOnly = true; dpw.readOnly = true; dh.readOnly = true;
+                    wh.style.opacity = '0.75'; dpw.style.opacity = '0.75'; dh.style.opacity = '0.75';
+                } else {
+                    presetSelect.value = 'other';
+                    wh.readOnly = false; dpw.readOnly = false; dh.readOnly = false;
+                    wh.style.opacity = '1'; dpw.style.opacity = '1'; dh.style.opacity = '1';
+                }
             } else {
-                select.value = 'other';
-                input.style.display = 'block';
+                wh.readOnly = true; dpw.readOnly = true; dh.readOnly = true;
+                wh.style.opacity = '0.75'; dpw.style.opacity = '0.75'; dh.style.opacity = '0.75';
             }
         })();
     </script>

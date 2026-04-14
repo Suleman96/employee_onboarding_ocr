@@ -18,7 +18,7 @@ DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False},
-    echo=True,
+    echo=False,
 )
 
 SessionLocal = sessionmaker(bind=engine, autocommit =False, autoflush=False)

@@ -499,6 +499,18 @@
                     <div class="info-label">Weekly Hours</div>
                     <div class="info-value">{{ employee.weekly_hours or '—' }}</div>
                 </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value">{{ employee.department or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Days per Week</div>
+                    <div class="info-value">{{ employee.work_days_per_week or '—' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Daily Hours</div>
+                    <div class="info-value">{{ employee.daily_hours or '—' }}</div>
+                </div>
             </div>
 
             <!-- System Information -->
