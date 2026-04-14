@@ -177,7 +177,7 @@ def normalize_department(value: Optional[str]) -> Optional[str]:
     # Department is not currently used for template resolution, 
     # but we normalize it here in case it's needed in the future.
     
-    raw = clean_text
+    raw = clean_text(value)
     if raw is None:
         return None
     
@@ -253,11 +253,22 @@ _KOELN_GROUP_ROLE_TOKEN = {
 _WIEN_ROLE_TOKEN = {
     "reinigungskraft": "Reinigungskraft",
     "reinigungskraft_td": "Reinigungskraft TD",
+    "reinigungskraft_td": "Reinigungskraft_TD",
+
+
     "reinigungskraft_pa": "Reinigungskraft PA",
+    "reinigungskraft_pa": "Reinigungskraft_PA",
     "reinigungskraft_hm": "Reinigungskraft HM",
+    "reinigungskraft_hm": "Reinigungskraft HM",
+
     "reinigungskraft_nr": "Reinigungskraft NR",
+    "reinigungskraft_nr": "Reinigungskraft_NR",
+    "reinigungskraft_public": "Reinigungskraft_Public",
     "reinigungskraft_public": "Reinigungskraft Public",
+
     "reinigungskraft_stw": "Reinigungskraft STW",
+    "reinigungskraft_stw": "Reinigungskraft_STW",
+
     "zimmermaedchen": "Zimmermädchen",
     "hsk_supervisor": "HSK Supervisor",
     "hsk_manager": "HSK Manager",
@@ -361,6 +372,73 @@ def _require(value: Any, field: str) -> Any:
         raise ValueError(f"{field} is required to resolve a contract template")
     return value
 
+def validate_contract_selection(attrs: Dict[str, Any]) -> None:
+    city = attrs.get("city_code")
+    occupation = attrs.get("occupation_code")
+    weekly_hours = attrs.get("weekly_hours")
+    days_per_week = attrs.get("days_per_week")
+    daily_hours = attrs.get("daily_hours")
+    
+    if not city:
+        raise ValueError("work_city is required to resolve a contract template")
+    
+    if not occupation:
+        raise ValueError("occupation is required to resolve a contract template")
+    
+    city_rules = CITY_ROLE_SCHEDULE_RULES.get(city)
+    if not city_rules:
+        return # no special validation for this city 
+    
+    allowed_combinations  = city_rules.get(occupation)
+    if not allowed_combinations:
+        raise ValueError(
+            f"weekly_hours is required for city '{city}' and occupation '{occupation}'"
+        )
+    if weekly_hours is None:
+        available_hours = sorted({combo[0] for combo in allowed_combinations})
+        raise ValueError(
+            
+            f"weekly_hours is reuired for city '{city}' and occupation '{occupation}'."
+            f"Available hours: {', '.join(str(h) for h in available_hours)}"
+        )
+        
+    if days_per_week is None:
+        available_days = sorted({combo[1] for combo in allowed_combinations })
+        raise ValueError(
+            f"work_day_per_week is required for city '{city}' and occupation '{occupation}'."
+            f"Available days/week: {', '.join(str(d) for d in available_days)}"
+            
+        )
+        
+    if daily_hours is None:
+        available_daily = sorted({combo[2] for combo in allowed_combinations })
+        raise ValueError(
+            f"daily_hours is required for city '{city}' and occupation '{occupation}'. "
+            f"Available daily hours: {', '.join(str(d) for d in available_daily)}"
+        )
+        
+    # Normalize daily hours for comparison: 8 == 8.0 should match
+    actual = (int(weekly_hours), int(days_per_week), float(daily_hours))
+    
+    def _combo_matches(candidate: tuple[int, int, int]) -> bool:
+        return (
+        int(candidate[0]) == actual[0]
+        and int(candidate[1]) == actual[1]
+        and float(candidate[2]) == actual[2]
+    )
+        
+    if not any(_combo_matches(combo) for combo in allowed_combinations):
+        allowed_text = "; ".join(
+            f"{w}/{d}/{dh}" for w, d, dh in allowed_combinations
+        )
+        
+        raise ValueError(
+            f"Invalid schedule for city '{city}' and occupation '{occupation}'."
+            f"Got {actual[0]}/{actual[1]}/{actual[2]}. "
+            f"Allowed combinations: {allowed_text}"
+        )
+            
+    
 
 def resolve_berlin_template(attrs: Dict[str, Any]) -> Path:
     contract_type = attrs["contract_type_code"]
@@ -452,8 +530,8 @@ def resolve_koeln_group_template(attrs: Dict[str, Any]) -> Path:
 def resolve_wien_template(attrs: Dict[str, Any]) -> Path:
     occupation = attrs["occupation_code"]
     weekly_hours = attrs["weekly_hours"]
-    # days_per_week and daily_hours are encoded in filenames for some Wien templates,
-    # but not all are strictly needed if weekly_hours + role matches uniquely.
+    days_per_week = attrs.get("days_per_week")
+    daily_hours = attrs.get("daily_hours")
 
     base_dir = CONTRACTS_DIR / "wien"
 
@@ -484,10 +562,32 @@ def resolve_wien_template(attrs: Dict[str, Any]) -> Path:
             "weekly_hours is required for Wien templates "
             f"for occupation '{occupation}'"
         )
-
+    
+    
     hour_candidates = _wien_role_hour_candidates(base_dir, role_token, weekly_hours)
     if len(hour_candidates) == 1:
         return hour_candidates[0]
+    # If multiple templates match same role + weekly hours, narrow by days/daily hours
+    if len(hour_candidates) > 1 and days_per_week is not None and daily_hours is not None:
+        narrowed = []
+        for path in hour_candidates:
+            stem = path.stem.lower().replace(".", "")
+            day_token = f"_{int(days_per_week)}_tage_"
+            daily_token = f"_{int(float(daily_hours))}_std"
+            if day_token in stem and daily_token in stem:
+                narrowed.append(path)
+
+        if len(narrowed) == 1:
+            return narrowed[0]
+
+        if len(narrowed) > 1:
+            raise FileNotFoundError(
+                "Multiple Wien templates matched for "
+                f"occupation '{occupation}', weekly_hours '{weekly_hours}', "
+                f"days_per_week '{days_per_week}', daily_hours '{daily_hours}':\n"
+                + "\n".join(str(path) for path in narrowed)
+            )
+            
     if len(hour_candidates) > 1:
         raise FileNotFoundError(
             "Multiple Wien templates matched for "
@@ -513,6 +613,8 @@ def resolve_template_path(employee) -> Path:
     
     attrs = normalize_contract_attributes(employee)
     city = attrs["city_code"]
+    
+    validate_contract_selection(attrs)
     
     if city == "berlin":
         return resolve_berlin_template(attrs)
