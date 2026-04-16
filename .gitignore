@@ -35,6 +35,11 @@ uploads/
 preprocessed/
 generated_contracts/
 output/
+notebooks/passport_.jpg
+notebooks/passport.jpg
+
+
+
 # OCR and intermediate artifacts
 ocr/**
 

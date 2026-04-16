@@ -568,9 +568,16 @@
             <div class="footer-group">
                 <span class="footer-group-title">Record Actions</span>
                 <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
+                <form action= "/delete-employee/{{employee.id}}" method ='post' style= "display:inline;">
+                    <button
+                        type= "submit"
+                        class= "btn btn-delete"
+                        onclick="return confirm('Are you sure you want to delete this employee: {{employee.first_name}} {{employee.last_name}}?');">
+                        Löschen
+                    </button>
+                </form>
                 <a href="/generate-contract/{{employee.id}}" class="btn btn-primary">📄 Generate Contract</a>
             </div>
-
             <div class="footer-group">
                 <span class="footer-group-title">Downloads</span>
                 <a href="/download-contract/{{ employee.id }}" class="btn btn-secondary">Download Last Contract</a>

@@ -10,6 +10,8 @@ pytesseract # This is used for OCR, it is a wrapper for Tesseract OCR
 # Mistral.AI
 # https://console.mistral.ai/upgrade/plans
 
+opencv-python
+
 fastapi 
 uvicorn[standard] 
 python-multipart 

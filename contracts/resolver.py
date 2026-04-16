@@ -228,18 +228,17 @@ UNBEFRISTET_SUBGROUP_FOLDER = {
 
 _BERLIN_ROLE_TOKEN = {
     # Berlin befristet templates use "FLOOR SUPERVISOR" in the filename.
-    "floor_supervisor": {"befristet": "FLOOR SUPERVISOR", "unbefristet": "SUPERVISOR"},
+    "floor_supervisor": {"befristet": "floor_supervisor", "unbefristet": "floor_supervisor"},
     "hsk": {"befristet": "HSK", "unbefristet": "HSK"},
-    "hsk_supervisor": {"befristet": None, "unbefristet": "SUPERVISOR"},  # no befristet file observed
-    "hsk_manager": {"befristet": None, "unbefristet": None},
     "glasreiniger": {"befristet": "GLASREINIGER", "unbefristet": "GLASREINIGER"},
     "hausmann": {"befristet": "HAUSMANN", "unbefristet": "HAUSMANN"},
     "minibar": {"befristet": "MINIBAR", "unbefristet": "MINIBAR"},
+    "minijob": {"befristet": "minijob", "unbefristet": None},
     "nr": {"befristet": "NR", "unbefristet": "NR"},
     "public_area": {"befristet": "PUBLIC AREA", "unbefristet": "PUBLIC AREA"},
     "stw": {"befristet": "STW", "unbefristet": "STW"},
     "reinigungskraft": {"befristet": "REINIGUNGSKRAFT", "unbefristet": None},  # unbefristet file not observed
-    "zimmermaedchen": {"befristet": None, "unbefristet": None},
+    # "zimmermaedchen": {"befristet": None, "unbefristet": None},
 }
 
 
@@ -439,8 +438,12 @@ def resolve_berlin_template(attrs: Dict[str, Any]) -> Path:
     _require(occupation, "occupation")
 
     if contract_type == "unbefristet":
-        subfolder = UNBEFRISTET_SUBGROUP_FOLDER.get(subgroup or "", "VORLAGEN Unbefristet_Adlon")
-        base_dir = CONTRACTS_DIR / "berlin" / "unbefristet" / subfolder
+        subgroup_folder  = UNBEFRISTET_SUBGROUP_FOLDER.get(subgroup or "")
+        if not subgroup_folder:
+            raise ValueError(
+                f"Berlin unbefristet requires subgroup 'adlon' or 'ghb'. Got '{subgroup}'"
+            )
+        base_dir = CONTRACTS_DIR / "berlin" / "unbefristet" / subgroup_folder
     else:
         base_dir = CONTRACTS_DIR / "berlin" / contract_type / "2026"
 
@@ -466,7 +469,7 @@ def resolve_berlin_template(attrs: Dict[str, Any]) -> Path:
         # Example (current): ASN_AV_berlin_floor_supervisor_befristet_40.docx
         return _pick_by_contains_fallback(base_dir, hours_required_sets)
 
-    if contract_type == "befristet" and occupation == "minibar":
+    if contract_type == "befristet" and occupation == "minijob":
         # This one doesn't follow the standard naming convention.
         return _pick_by_contains(base_dir, ["ASN_AV_berlin_Minijob_befristet"])
 

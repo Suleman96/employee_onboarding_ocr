@@ -482,6 +482,29 @@ def update_employee(
     return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
     
 
+@app.post("/delete-employee/{employee_id}")
+def delete_employee(employee_id: int, db:Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
+        return HTMLResponse(content= "<h1>Employee not found </h1>", status_code= 404)
+    
+    employee_name = f"{employee.first_name or ''} {employee.last_name or ''}".strip()
+    
+    audit_entry = AuditLog(
+        action = "delete",
+        employee_id = employee.id,
+        details= f"Deleted Employee: {employee_name}",
+        performed_by ="system"
+    )    
+    
+    db.add(audit_entry)
+    db.delete(employee)
+    db.commit()
+    
+    return RedirectResponse(url="/", status_code=303)
+    
+
+
 @app.get("/employees", response_model= list[EmployeeResponse])
 def list_employees(db: Session = Depends(get_db)):
     employees = db.query(Employee).all()
@@ -516,7 +539,7 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
     try:
         output_path = generate_contract_for_employee(employee)
         
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, ValueError) as exc:
         return {"error": str(exc)}
     
     # Step:  Convert DOCX to PDF
@@ -529,7 +552,7 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
      
     # Step 4: Save contract path and generation time to employee record
     employee.last_contract_pdf_path = str(pdf_path)  
-    employee.last_contract_pdf_generated_at = datetime.now(timezone.utc)  
+    employee.last_contract_pdf_path_generated_at= datetime.now(timezone.utc)  
     
     
     # Step 5: Audit Log
@@ -659,6 +682,7 @@ def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
         filename=contract_path.name,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
 
 
 

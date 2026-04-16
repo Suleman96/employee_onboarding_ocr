@@ -111,6 +111,10 @@
         .btn-preview   { background: var(--accent); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
         .btn-preview:hover { background: var(--primary); }
 
+
+        .btn-delete   { background: var(--primary-dk); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
+        .btn-preview:hover { background: var(--primary); }
+
         .btn-review    { background: var(--primary); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
         .btn-review:hover { background: var(--primary-dk); }
 
@@ -255,8 +259,16 @@
                     <td>{{ employee.created_at }}</td>
                     <td>
                         <div class="action-cell">
-                            <a class="btn btn-review" href="/review/{{ employee.id }}">Review</a>
-                            <a class="btn btn-preview" href="/preview/{{ employee.id }}">Preview</a>
+                            <a class="btn btn-review" href="/review/{{ employee.id }}">Überprüfen</a>
+                            <a class="btn btn-preview" href="/preview/{{ employee.id }}">Vorschau</a>
+                            <form action= "/delete-employee/{{employee.id}}" method ='post' style= "display:inline;">
+                                <button
+                                    type= "submit"
+                                    class= "btn btn-delete"
+                                    onclick="return confirm('Are you sure you want to delete this employee: {{employee.first_name}} {{employee.last_name}}?');">
+                                    Löschen
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -264,7 +276,9 @@
             </tbody>
         </table>
     </div>
+
     {% else %}
+    
     <div class="not-found">
         No employees found. Click <strong>"+ New Employee"</strong> to get started.
     </div>
