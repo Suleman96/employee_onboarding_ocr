@@ -10,7 +10,8 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request, Depends, Form
+from fastapi import FastAPI, Request, Depends, Form, HTTPException
+from urllib.parse import quote
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError
@@ -32,7 +33,8 @@ async def lifespan(app: FastAPI):
     print("Database tables created or already exist.")
     yield
     # Shutdown code (if needed) can go here
-    
+
+
 # ── Create the FastAPI application ──────────────────────────────
 
 app = FastAPI(lifespan=lifespan, # This tells FastAPI to use the lifespan function for startup/shutdown events 
@@ -94,13 +96,108 @@ def home(request: Request, db:Session=Depends(get_db)):
         )
 
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "message": "App is running"}
+
+@app.post("/api/employees/n8n-intake")
+def create_employee_from_n8n(payload: EmployeeCreate, db: Session = Depends(get_db)):
+    try:
+        new_employee = Employee(
+            first_name=payload.first_name,
+            middle_name=payload.middle_name,
+            last_name=payload.last_name,
+            gender=payload.gender,
+            date_of_birth=payload.date_of_birth,
+            place_of_birth=payload.place_of_birth,
+            country_of_birth=payload.country_of_birth,
+            nationality=payload.nationality,
+            marital_status=payload.marital_status,
+
+            ausweis_number=payload.ausweis_number,
+            ausweis_expiry_date=payload.ausweis_expiry_date,
+            reise_pass_number=payload.reise_pass_number,
+            reise_pass_expiry_date=payload.reise_pass_expiry_date,
+            working_permit_number=payload.working_permit_number,
+            working_permit_expiry=payload.working_permit_expiry,
+            visa_number=payload.visa_number,
+            visa_expiry=payload.visa_expiry,
+
+            street_and_house_number=payload.street_and_house_number,
+            phone=payload.phone,
+            emergency_contact_name=payload.emergency_contact_name,
+            emergency_contact_phone=payload.emergency_contact_phone,
+            zip_code=payload.zip_code,
+            city=payload.city,
+            email=payload.email,
+            country=payload.country or "Deutschland",
+
+            krankenkasse=payload.krankenkasse,
+            krankenkasse_nummer=payload.krankenkasse_nummer,
+            steuer_id=payload.steuer_id,
+            steuerklasse=payload.steuerklasse,
+            sozialversicherungsnummer=payload.sozialversicherungsnummer,
+
+            bank_name=payload.bank_name,
+            bank_iban=payload.bank_iban,
+            bank_bic=payload.bank_bic,
+            bank_account_holder=payload.bank_account_holder,
+
+            work_city=payload.work_city,
+            department=payload.department,
+            employment_type=payload.employment_type,
+            occupation=payload.occupation,
+            position_level=payload.position_level,
+            weekly_hours=payload.weekly_hours,
+            work_days_per_week=payload.work_days_per_week,
+            daily_hours=payload.daily_hours,
+            start_date=payload.start_date,
+            contract_type=payload.contract_type or "temporary",
+            hotel_name=payload.hotel_name,
+            end_date=payload.end_date,
+            probation_period_months=payload.probation_period_months,
+            previous_employer=payload.previous_employer,
+            education_level=payload.education_level,
+
+            disabled=payload.disabled if payload.disabled is not None else False,
+            status=payload.status or "draft",
+            ordio_id=payload.ordio_id,
+
+            last_contract_path=payload.last_contract_path,
+            last_contract_generated_at=payload.last_contract_generated_at,
+            last_contract_pdf_path=payload.last_contract_pdf_path,
+            last_contract_pdf_path_generated_at=payload.last_contract_pdf_path_generated_at,
+        )
+        
+        db.add(new_employee)
+        db.commit()
+        db.refresh(new_employee)
+        
+        audit_entry= AuditLog(
+            action = "create_from_n8n",
+            employee_id= new_employee.id,
+            details= f"Created from n8n: {new_employee.first_name or ''} {new_employee.last_name or ''}".strip(),
+            performed_by= "n8n"
+        )
+        db.add(audit_entry)
+        db.commit()
+        
+        return{
+            "success": True,
+            "employee_id": new_employee.id,
+            "message": "Employee saved successfully"
+        }
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+        
 
 @app.get("/upload", response_class=HTMLResponse)
 def upload_page(request: Request):
     return templates.TemplateResponse(request=request, name="upload.html")
+
 
 
 @app.post("/employees/new")
@@ -345,8 +442,19 @@ def update_employee(
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
-    
-    
+
+    if email:
+        email_conflict = db.query(Employee).filter(Employee.email == email, Employee.id != employee_id).first()
+        if email_conflict:
+            return templates.TemplateResponse(
+                request=request,
+                name="edit_review.html",
+                context={
+                    "employee": employee,
+                    "error_message": "That email address is already assigned to another employee. Please use a unique email.",
+                },
+            )
+
     incoming_data = {
         "first_name": first_name,
         "middle_name": middle_name,
@@ -444,18 +552,6 @@ def update_employee(
         employee.status = "under_review"
         changed_fields["status"] = {"old": old_status, "new": "under_review"}
 
-    if email:
-        email_conflict = db.query(Employee).filter(Employee.email == email, Employee.id != employee_id).first()
-        if email_conflict:
-            return templates.TemplateResponse(
-                request=request,
-                name="edit_review.html",
-                context={
-                    "employee": employee,
-                    "error_message": "That email address is already assigned to another employee. Please use a unique email.",
-                },
-            )
-
     try:
         db.commit()
         db.refresh(employee)
@@ -498,9 +594,10 @@ def delete_employee(employee_id: int, db:Session = Depends(get_db)):
     )    
     
     db.add(audit_entry)
+    db.commit()
     db.delete(employee)
     db.commit()
-    
+
     return RedirectResponse(url="/", status_code=303)
     
 
@@ -595,7 +692,7 @@ def approve_employee(employee_id: int, db: Session = Depends(get_db)):
         db.commit()
         missing_text = ", ".join(missing_fields)
         return RedirectResponse(
-            url=f"/review/{employee.id}?approval_error=Missing required fields: {missing_text}",
+            url=f"/review/{employee.id}?approval_error={quote(f'Missing required fields: {missing_text}')}",
             status_code=303,
         )
 
@@ -685,7 +782,6 @@ def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
 
 
 
-
 @app.get("/api/audit-logs", response_model=List[AuditLogResponse])
 def list_audit_logs_api(db: Session = Depends(get_db)):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
@@ -702,3 +798,6 @@ def audit_logs_page(request: Request, db: Session = Depends(get_db)):
     )
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "App is running"}
