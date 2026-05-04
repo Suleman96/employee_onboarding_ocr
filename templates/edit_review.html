@@ -330,6 +330,8 @@
                                 <option value="Kontor Haus">Kontor Haus</option>
                                 <option value="Linden Palais">Linden Palais</option>
                                 <option value="Pressehaus Podium">Pressehaus Podium</option>
+                                <option value="Hyatt Regency Vienna">Hyatt Regency Vienna</option>
+                                <option value="Park Hyatt Vienna">Park Hyatt Vienna</option>
                                 <option value="other">Other</option>
                             </select>
                             <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." value="{{ employee.hotel_name or '' }}" style="display:none; margin-top:4px;">
@@ -454,7 +456,7 @@
 
         const KNOWN_HOTELS = [
             'Hotel Adlon Kempinski', 'Grand Hyatt Berlin', 'China Club Berlin',
-            'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'
+            'Kontor Haus', 'Linden Palais', 'Pressehaus Podium', 'Hyatt Regency Vienna', 'Park Hyatt Vienna'
         ];
 
         const KNOWN_CITIES_LIST = ['Bergisch Gladbach', 'Berlin', 'Düsseldorf', 'Frankfurt', 'Hamburg', 'Köln', 'Wien'];
@@ -573,12 +575,29 @@
                 input.value = select.value;
             }
 
-            // Hotel: Berlin-only
-            const isBerlin = select.value.toLowerCase() === 'berlin';
+            const selectedCity = (select.value || '').toLowerCase();
+            const isBerlin = selectedCity === 'berlin';
+            const isWien = selectedCity === 'wien' || selectedCity === 'vienna';
+            const berlinHotels = [
+                'Hotel Adlon Kempinski', 'Grand Hyatt Berlin', 'China Club Berlin',
+                'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'
+            ];
+            const wienHotels = ['Hyatt Regency Vienna', 'Park Hyatt Vienna'];
+
             for (const opt of hotelSelect.options) {
-                if (opt.value && opt.value !== 'other') opt.disabled = !isBerlin;
+                if (!opt.value || opt.value === 'other') {
+                    opt.style.display = 'block';
+                    continue;
+                }
+                if (isBerlin) {
+                    opt.style.display = berlinHotels.includes(opt.value) ? 'block' : 'none';
+                } else if (isWien) {
+                    opt.style.display = wienHotels.includes(opt.value) ? 'block' : 'none';
+                } else {
+                    opt.style.display = 'none';
+                }
             }
-            if (!isBerlin) {
+            if (!isBerlin && !isWien) {
                 hotelSelect.value = '';
                 if (hotelInput) { hotelInput.style.display = 'none'; hotelInput.value = ''; }
             }
@@ -689,10 +708,27 @@
             const hotelSelect = document.getElementById('hotel_name_select');
             const hotelInput  = document.getElementById('hotel_name_input');
             const savedHotel  = {{ employee.hotel_name | tojson }};
-            const isBerlin    = (savedCity || '').toLowerCase() === 'berlin';
+            const selectedCity = (savedCity || '').toLowerCase();
+            const isBerlin    = selectedCity === 'berlin';
+            const isWien      = selectedCity === 'wien' || selectedCity === 'vienna';
+            const berlinHotels = [
+                'Hotel Adlon Kempinski', 'Grand Hyatt Berlin', 'China Club Berlin',
+                'Kontor Haus', 'Linden Palais', 'Pressehaus Podium'
+            ];
+            const wienHotels = ['Hyatt Regency Vienna', 'Park Hyatt Vienna'];
 
             for (const opt of hotelSelect.options) {
-                if (opt.value && opt.value !== 'other') opt.disabled = !isBerlin;
+                if (!opt.value || opt.value === 'other') {
+                    opt.style.display = 'block';
+                    continue;
+                }
+                if (isBerlin) {
+                    opt.style.display = berlinHotels.includes(opt.value) ? 'block' : 'none';
+                } else if (isWien) {
+                    opt.style.display = wienHotels.includes(opt.value) ? 'block' : 'none';
+                } else {
+                    opt.style.display = 'none';
+                }
             }
             if (savedHotel && KNOWN_HOTELS.includes(savedHotel)) {
                 hotelSelect.value = savedHotel;

@@ -53,6 +53,18 @@
             overflow: hidden;
             border: 1px solid rgba(203,213,225,0.5);
         }
+        
+        .error-banner {
+            margin-bottom: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(153, 27, 27, 0.08);
+        }
 
         /* ── Header ── */
         .header {
@@ -160,6 +172,22 @@
             gap: 0.25rem;
         }
         .field.full-width { grid-column: 1 / -1; }
+        .employment-grid {
+            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            align-items: end;
+        }
+
+        @media (max-width: 1100px) {
+            .employment-grid {
+                grid-template-columns: repeat(2, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .employment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
         /* ── Labels ── */
         label {
@@ -381,14 +409,27 @@
             <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
         </div>
         <div class="content">
+            {% if error_message %}
+            
+            <div class="error-banner">
+                {{ error_message }}
+            </div>
+            {% endif %}
+            {% set fd = form_data or {} %}
             <form action="/employees/new" method="post">
                 <!-- Personal Information -->
                 <div class="form-section">
                     <h3>Personal Information</h3>
                     <div class="fields-row">
-                        <div class="field"><label>First Name</label><input type="text" name="first_name" required></div>
-                        <div class="field"><label>Last Name</label><input type="text" name="last_name" required></div>
-                        <div class="field"><label>Gender</label><select name="gender"><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option></select></div>
+                        <div class="field"><label>First Name</label><input type="text" name="first_name" value="{{ fd.get('first_name', '') }}" required></div>
+                        <div class="field"><label>Last Name</label><input type="text" name="last_name" vaöie  required></div>
+                        <div class="field"><label>Gender</label>
+                            <select name="gender">
+                                <option value="">Choose</option>
+                                <option value="male" {% if fd.get('gender') == 'male' %}selected{% endif %}>Male</option>
+                                <option value="female" {% if fd.get('gender') == 'female' %}selected{% endif %}>Female</option>
+                            </select>
+                        </div>
                         <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
                     </div>
                 </div>
@@ -398,7 +439,7 @@
                     <h3>Contact & Location</h3>
                     <div class="fields-row">
                         <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
-                        <div class="field"><label>Email</label><input type="email" name="email"></div>
+                        <div class="field"><label>Email</label><input type="text" name="first_name" value="{{ fd.get('first_name', '') }}" required></div>
                         <div class="field"><label>Street & House No.</label><input type="text" name="street_and_house_number"></div>
                         <div class="field"><label>ZIP Code</label><input type="text" name="zip_code"></div>
                         <div class="field"><label>City</label><input type="text" name="city"></div>
@@ -453,7 +494,9 @@
                 <!-- Employment Details -->
                 <div class="form-section">
                     <h3>Employment Details</h3>
-                    <div class="fields-row">
+
+                    <!-- Row 1: decision flow -->
+                    <div class="fields-row employment-grid">
                         <div class="field">
                             <label>City of Work</label>
                             <select id="work_city_select" onchange="handleWorkCityChange(this)">
@@ -466,10 +509,20 @@
                                 <option value="Wien">Wien</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input type="text" name="work_city" id="work_city_input" placeholder="Enter city..." style="display:none; margin-top:4px;">
+                            <input type="text" name="work_city" id="work_city_input" value="{{ fd.get('work_city', '') }}" placeholder="Enter city..." style="display:none; margin-top:4px;">
                         </div>
-                        <div class="field">
-                            <label>Hotel Name</label>
+
+                        <div class="field" id="contract_type_field">
+                            <label>Contract Type</label>
+                            <select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)" disabled>
+                                <option value="">Choose Contract Type</option>
+                                <option value="temporary" {% if fd.get('contract_type') == 'temporary' %}selected{% endif %}>Temporary</option>
+                                <option value="permanent" {% if fd.get('contract_type') == 'permanent' %}selected{% endif %}>Permanent</option>
+                            </select>
+                        </div>
+
+                        <div class="field" id="hotel_field" style="display:none;">
+                            <label>Hotel Name / Group</label>
                             <select id="hotel_name_select" name="hotel_name_select" onchange="handleHotelNameChange(this)">
                                 <option value="">Choose Hotel</option>
                                 <option value="Hotel Adlon Kempinski">Adlon Hotel Berlin</option>
@@ -478,17 +531,41 @@
                                 <option value="Kontor Haus">Kontor Haus</option>
                                 <option value="Linden Palais">Linden Palais</option>
                                 <option value="Pressehaus Podium">Pressehaus Podium</option>
+                                <option value="Hyatt Regency Vienna">Hyatt Regency Vienna</option>
+                                <option value="Park Hyatt Vienna">Park Hyatt Vienna</option>
                                 <option value="other">Other</option>
                             </select>
-                            <input type="text" name="hotel_name_custom" id="hotel_name_input" placeholder="Enter hotel..." autocomplete="off" style="display:none; margin-top:4px;">
+                            <input type="text" name="hotel_name_custom" id="hotel_name_input" value="{{ fd.get('hotel_name_custom', '') }}" placeholder="Enter hotel..." autocomplete="off" style="display:none; margin-top:4px;">
                         </div>
-                        <div class="field">
+
+                        <div class="field" id="occupation_field">
                             <label>Occupation</label>
-                            <select id="occupation_select" onchange="handleOccupationChange(this)">
+                            <select id="occupation_select" onchange="handleOccupationChange(this)" disabled>
                                 <option value="">Choose Occupation</option>
                             </select>
-                            <input type="text" name="occupation" id="occupation_input" placeholder="Enter occupation..." style="display:none; margin-top:4px;">
+                            <input type="text" name="occupation" id="occupation_input" value="{{ fd.get('occupation', '') }}" placeholder="Enter occupation..." style="display:none; margin-top:4px;">
                         </div>
+
+                        <div class="field">
+                            <label>Employment Type</label>
+                            <select name="employment_type" id="employment_type">
+                                <option value="">Choose</option>
+                                <option value="Vollzeit" {% if fd.get('employment_type') == 'Vollzeit' %}selected{% endif %}>Vollzeit (Full-time)</option>
+                                <option value="Teilzeit" {% if fd.get('employment_type') == 'Teilzeit' %}selected{% endif %}>Teilzeit (Part-time)</option>
+                                <option value="Minijob" {% if fd.get('employment_type') == 'Minijob' %}selected{% endif %}>Minijob</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Start Date</label>
+                            <input type="date" name="start_date" id="start_date" value="{{ fd.get('start_date', '') }}" onchange="autoFillEndDate()">
+                        </div>
+
+                        <div class="field">
+                            <label>End Date</label>
+                            <input type="date" name="end_date" id="end_date" value="{{ fd.get('end_date', '') }}">
+                        </div>
+
                         <div class="field" id="department_field" style="display:none;">
                             <label>Work Area (Abteilung)</label>
                             <select name="department" id="department_select">
@@ -501,35 +578,56 @@
                                 <option value="Public Area">Public Area</option>
                             </select>
                         </div>
-                        <div class="field"><label>Employment Type</label><select name="employment_type"><option value="">Choose</option><option value="Vollzeit">Vollzeit (Full-time)</option><option value="Teilzeit">Teilzeit (Part-time)</option><option value="Minijob">Minijob</option></select></div>
-                        <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" onchange="autoFillEndDate()"></div>
-                        <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date"></div>
-                        <div class="field"><label>Contract Type</label><select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)"><option value="temporary" selected>Temporary</option><option value="permanent">Permanent</option></select></div>
-                        
-                        <div class="field"><label>Work Schedule Preset</label><select id="schedule_preset" onchange="applySchedulePreset(this)"><option value="">Choose Preset</option><option value="20|5|4">20 hrs / 5 days / 4 hrs/day</option>
-                            <option value="24|3|8">24 hrs / 3 days / 8 hrs/day</option><option value="25|5|5">25 hrs / 5 days / 5 hrs/day</option><option value="30|5|6">30 hrs / 5 days / 6 hrs/day</option><option value="32|4|8">32 hrs / 4 days / 8 hrs/day</option>
-                            <option value="35|5|7">35 hrs / 5 days / 7 hrs/day</option><option value="40|5|8">40 hrs / 5 days / 8 hrs/day</option><option value="other">Custom</option></select></div>
-                        
+                    </div>
+
+                    <!-- Row 2: schedule -->
+                    <div class="fields-row employment-grid" style="margin-top:0.75rem;">
+                        <div class="field" id="schedule_field">
+                            <label>Work Schedule Preset</label>
+                            <select id="schedule_preset" onchange="applySchedulePreset(this)" disabled>
+                                <option value="">Choose Preset</option>
+                                <option value="20|5|4">20 hrs / 5 days / 4 hrs/day</option>
+                                <option value="24|3|8">24 hrs / 3 days / 8 hrs/day</option>
+                                <option value="25|5|5">25 hrs / 5 days / 5 hrs/day</option>
+                                <option value="30|5|6">30 hrs / 5 days / 6 hrs/day</option>
+                                <option value="32|4|8">32 hrs / 4 days / 8 hrs/day</option>
+                                <option value="35|5|7">35 hrs / 5 days / 7 hrs/day</option>
+                                <option value="40|5|8">40 hrs / 5 days / 8 hrs/day</option>
+                                <option value="other">Custom</option>
+                            </select>
+                        </div>
+
                         <div class="field">
                             <label>Weekly Hours</label>
-                            <input type="number" id="weekly_hours" min="1" max="60" placeholder="40" readonly>
-                            <input type="hidden" name="weekly_hours" id="weekly_hours_hidden">
+                            <input type="number" id="weekly_hours" value="{{ fd.get('weekly_hours', '') }}" min="1" max="60" placeholder="40" readonly>
+                            <input type="hidden" name="weekly_hours" id="weekly_hours_hidden" value="{{ fd.get('weekly_hours', '') }}">
                         </div>
 
                         <div class="field">
                             <label>Work Days/Week</label>
-                            <input type="number" id="work_days_per_week" min="1" max="7" placeholder="5" readonly>
-                            <input type="hidden" name="work_days_per_week" id="work_days_per_week_hidden">
+                            <input type="number" id="work_days_per_week" value="{{ fd.get('work_days_per_week', '') }}" min="1" max="7" placeholder="5" readonly>
+                            <input type="hidden" name="work_days_per_week" id="work_days_per_week_hidden" value="{{ fd.get('work_days_per_week', '') }}">
                         </div>
 
                         <div class="field">
                             <label>Hours/Day</label>
-                            <input type="number" id="daily_hours" min="1" max="24" placeholder="8" step="0.5" readonly>
-                            <input type="hidden" name="daily_hours" id="daily_hours_hidden">
+                            <input type="number" id="daily_hours" value="{{ fd.get('daily_hours', '') }}" min="1" max="24" placeholder="8" step="0.5" readonly>
+                            <input type="hidden" name="daily_hours" id="daily_hours_hidden" value="{{ fd.get('daily_hours', '') }}">
                         </div>
-                        
-                        <div class="field"><label>Status</label><select name="status"><option value="draft" selected>Draft</option><option value="under_review">Under Review</option><option value="approved">Approved</option></select></div>
-                        <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
+
+                        <div class="field">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="draft" selected>Draft</option>
+                                <option value="under_review">Under Review</option>
+                                <option value="approved">Approved</option>
+                            </select>
+                        </div>
+
+                        <div class="field full-width">
+                            <label>Ordio ID</label>
+                            <input type="text" name="ordio_id" value="{{ fd.get('ordio_id', '') }}">
+                        </div>
                     </div>
                 </div>
 
@@ -574,314 +672,148 @@
         </div>
     </div>
 
-    <!--
     <script>
-        function handleWorkCityChange(select) {
-            const input = document.getElementById('work_city_input');
-            const hotelSelect = document.getElementById('hotel_name_select');
-            const hotelInput = document.getElementById('hotel_name_input');
-            if (select.value === 'other') {
-                input.style.display = 'block';
-                input.value = '';
-                input.focus();
-            } else {
-                input.style.display = 'none';
-                input.value = select.value;
-            }
-            const isBerlin = select.value.toLowerCase() === 'berlin';
-            hotelSelect.disabled = false;
-            hotelSelect.style.opacity = '1';
-            Array.from(hotelSelect.options).forEach(opt => {
-                opt.disabled = !isBerlin && opt.value !== 'other' && opt.value !== '';
-            });
-            if (!isBerlin) {
-                hotelSelect.value = '';
-                hotelInput.style.display = 'none';
-                hotelInput.value = '';
-            }
-        }
-
-        function handleOccupationChange(select) {
-            const input = document.getElementById('occupation_input');
-            const deptField = document.getElementById('department_field');
-            const deptSelect = document.getElementById('department_select');
-            if (select.value === 'other') {
-                input.style.display = 'block';
-                input.value = '';
-                input.focus();
-                deptField.style.display = 'none';
-                deptSelect.value = '';
-            } else {
-                input.style.display = 'none';
-                input.value = select.value;
-                if (select.value === 'Reinigungskraft') {
-                    deptField.style.display = 'flex';
-                } else {
-                    deptField.style.display = 'none';
-                    deptSelect.value = '';
-                }
-            }
-        }
-
-        function handleHotelNameChange(select) {
-            const input = document.getElementById('hotel_name_input');
-            if (!input) return;
-            if (select.value === 'other') {
-                input.style.display = 'block';
-                if (!input.value) {
-                    input.focus();
-                }
-            } else {
-                input.style.display = 'none';
-                input.value = '';
-            }
-        }
-
-        function applySchedulePreset(select) {
-            const weeklyInput = document.getElementById('weekly_hours');
-            const daysInput = document.getElementById('work_days_per_week');
-            const dailyInput = document.getElementById('daily_hours');
-            const contractSelect = document.getElementById('contract_type');
-
-            if (select.value === 'other') {
-                // Enable custom fields when "other" is selected
-                weeklyInput.disabled = false;
-                daysInput.disabled = false;
-                dailyInput.disabled = false;
-                contractSelect.disabled = false;
-                weeklyInput.style.opacity = '1';
-                daysInput.style.opacity = '1';
-                dailyInput.style.opacity = '1';
-                contractSelect.style.opacity = '1';
-            } else if (select.value) {
-                // Apply preset and disable custom fields
-                const [weekly, days, daily] = select.value.split('|');
-                weeklyInput.value = weekly;
-                daysInput.value = days;
-                dailyInput.value = daily;
-                weeklyInput.disabled = true;
-                daysInput.disabled = true;
-                dailyInput.disabled = true;
-                contractSelect.disabled = true;
-                weeklyInput.style.opacity = '0.5';
-                daysInput.style.opacity = '0.5';
-                dailyInput.style.opacity = '0.5';
-                contractSelect.style.opacity = '0.5';
-            } else {
-                // No preset selected, disable custom fields
-                weeklyInput.disabled = true;
-                daysInput.disabled = true;
-                dailyInput.disabled = true;
-                contractSelect.disabled = true;
-                weeklyInput.style.opacity = '0.5';
-                daysInput.style.opacity = '0.5';
-                dailyInput.style.opacity = '0.5';
-                contractSelect.style.opacity = '0.5';
-            }
-        }
-
-        // Add event listeners for automatic calculation and initialize custom fields
-        document.addEventListener('DOMContentLoaded', function() {
-            const weeklyInput = document.getElementById('weekly_hours');
-            const daysInput = document.getElementById('work_days_per_week');
-            const dailyInput = document.getElementById('daily_hours');
-            const hotelSelect = document.getElementById('hotel_name_select');
-            const workCitySelect = document.getElementById('work_city_select');
-            const workCityInput = document.getElementById('work_city_input');
-            const occupationSelect = document.getElementById('occupation_select');
-            const occupationInput = document.getElementById('occupation_input');
-            const contractType = document.getElementById('contract_type');
-
-            if (weeklyInput) {
-                weeklyInput.addEventListener('change', calcDailyHours);
-                weeklyInput.addEventListener('input', calcDailyHours);
-                weeklyInput.addEventListener('change', updateContractPreview);
-                weeklyInput.addEventListener('input', updateContractPreview);
-            }
-            if (daysInput) {
-                daysInput.addEventListener('change', calcDailyHours);
-                daysInput.addEventListener('input', calcDailyHours);
-                daysInput.addEventListener('change', updateContractPreview);
-                daysInput.addEventListener('input', updateContractPreview);
-            }
-            if (hotelSelect) {
-                handleHotelNameChange(hotelSelect);
-                hotelSelect.addEventListener('change', updateContractPreview);
-            }
-            if (workCitySelect) {
-                handleWorkCityChange(workCitySelect);
-                workCitySelect.addEventListener('change', updateContractPreview);
-            }
-            if (workCityInput) {
-                workCityInput.addEventListener('input', updateContractPreview);
-            }
-            
-            if (occupationSelect) {
-                handleOccupationChange(occupationSelect);
-                occupationSelect.addEventListener('change', updateContractPreview);
-            }
-            if (occupationInput) {
-                occupationInput.addEventListener('input', updateContractPreview);
-            }
-            if (contractType) {
-                contractType.addEventListener('change', updateContractPreview);
-            }
-            
-            updateContractPreview();
-        });
-
-        function calcDailyHours() {
-            const weekly = parseFloat(document.getElementById('weekly_hours').value);
-            const days = parseFloat(document.getElementById('work_days_per_week').value);
-            if (weekly > 0 && days > 0) {
-                const daily = weekly / days;
-                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
-            }
-        }
-
-        function handleContractDurationChange(select) {
-            const endDate = document.getElementById('end_date');
-            if (select.value === 'permanent') {
-                endDate.value = '';
-                endDate.disabled = true;
-                endDate.style.opacity = '0.4';
-            } else {
-                endDate.disabled = false;
-                endDate.style.opacity = '1';
-            }
-        }
-
-        function autoFillEndDate() {
-            const endDate = document.getElementById('end_date');
-            if (endDate.disabled) return;
-            const startVal = document.getElementById('start_date').value;
-            if (!startVal) return;
-            const start = new Date(startVal);
-            const end = new Date(start);
-            end.setFullYear(end.getFullYear() + 1);
-            end.setDate(end.getDate() - 1);
-            endDate.value = end.toISOString().split('T')[0];
-        }
-
-        function updateContractPreview(){
-            // 1. Read current values from the form
-
-            const cityRaw  = document.getElementById('work_city_input').value.trim().toLowerCase();
-            const hotelRaw = document.getElementById('hotel_name_select').value.toLowerCase();
-            const occRaw = document.getElementById('occupation_input').value.toLowerCase();
-            const contract= document.getElementById('contract_type').value.toLowerCase(); // unbefreist/befriest
-            const weekly = document.getElementById('weekly_hours').value.toLowerCase();
-            const days = document.getElementById('work_days_per_week').value.toLowerCase();
-            const daily = document.getElementById('daily_hours').value.toLowerCase();
-
-            const display = document.getElementById('contract-filename');
-            
-            // 2. Map contract type to German code (mirrors resolver.py CONTRACT_TYPE_ALIASES)
-            const contractCode = (contract == 'permanent') ? 'unbefristet' : 'befristet';
-
-            // 3. Map hotel or subgroup (mirrors resolvers.py SUBGROUP_ALIASES)
-            const hotelToSubgroup ={
-                'hotel adlon kempinski': 'adlon',
-                'adlon' : 'adlon',
-                'grand hyatt berlin': 'ghb',
-                'kontor haus':'ghb',
-                'linden palais': 'ghb',
-                'pressehaus podium': 'ghb',
-                'ghb': 'ghb',
-
-            };
-
-            const subgroup = hotelToSubgroup[hotelRaw] || null;
-            
-            // 4. Map occupation to code (mirrors resolver.py OCCUPATION_ALIASES)
-            const occMap = {
-                'floor supervisor': 'floor_supervisor',
-                'hsk supervisor': 'hsk_supervisor',
-                'hsk manager': 'hsk_manager',
-                'zimmermädchen': 'zimmermädchen',
-                'minibar': 'minibar',
-                'reinigungskraft' : 'reinigungskraft',
-                'glasreiniger' : 'glasreiniger',
-                'public area' : 'public_area',
-                'hausmann':'hausmann',
-                'stw':'stw',
-                'nr': 'nr'
-
-            }
-            const occ = occMap[occRaw] || occRaw.replace(/ /g, '_').toLowerCase();
-
-            // 5. Build filename base on city
-            let filename= '-';
-
-            if (!cityRaw || !occ){
-                display.textContent = '- select city and occupation -'
-                return;
-            }
-
-            if (cityRaw== 'berlin'){
-                if (contractCode === 'unbefristet' && subgroup){
-                    filename= `berlin_AV_${occ}_unbefristet_${subgroup}_40.docx`;
-                } else {
-                    filename= `ASN_AV_berlin_${occ}_${contractCode}_40.docx`;
-                }
-
-            } else if (['bergisch gladbach','düsseldorf','frankfurt','hamburg','münchen','köln'].includes(cityRaw)) {
-        
-                if (!weekly || !days || !daily) {
-                    display.textContent = ' -also select schedule preset or fill out weekly/daily hours-';
-                    return;
-                }
-                const cityCode = cityRaw.replace(/ /g, '_').replace('ü', 'ue').replace('ö', 'oe').replace('ä', 'ae');
-                filename = `ASN_AV_${cityCode}_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
-            } else if (cityRaw === 'wien' || cityRaw === 'vienna'){
-                 if (!weekly || !days || !daily) {
-                    display.textContent = '— also select schedule (hours/days) —';
-                    return;
-                }
-                filename = `AN_AV_wien_${occ}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
-            } else {
-                display.textContent = '- unknown city -';
-                return;
-            }
-
-            display.textContent = filename;
-        }
-        
-             
+        window.__FORM_DATA__ = {{ (form_data or {}) | tojson }};
     </script>
 
-
-    -->
-
     <script>
-        (function() {
+        (function () {
             function byId(id) {
                 return document.getElementById(id);
             }
 
             function setPreviewText(text) {
-                const preview = byId('contract-filename');
+                const preview = byId("contract-filename");
                 if (preview) {
                     preview.textContent = text;
                 }
             }
-            const CITY_OCCUPATION_OPTIONS = {
-                berlin: [
-                    { value: "HSK", label: "HSK (Housekeeping)" },
-                    { value: "Zimmermädchen", label: "Zimmermädchen" },
-                    { value: "Minibar", label: "Minibar" },
-                    { value: "Reinigungskraft", label: "Reinigungskraft" },
-                    { value: "Glasreiniger", label: "Glasreiniger" },
-                    { value: "Public Area", label: "Public Area" },
-                    { value: "Hausmann", label: "Hausmann" },
-                    { value: "STW", label: "STW" },
-                    { value: "NR", label: "NR" },
-                    { value: "Floor Supervisor", label: "Floor Supervisor" },
-                    { value: "HSK Supervisor", label: "HSK Supervisor" },
-                    { value: "HSK Manager", label: "HSK Manager" },
-                    { value: "other", label: "Other" }
-                ],
+            function resetFieldValue(id) {
+                const el = byId(id);
+                if (!el) return;
+                if (el.tagName === "SELECT") {
+                    el.value = "";
+                } else {
+                    el.value = "";
+                }
+            }
 
+            function setFieldEnabled(id, enabled) {
+                const el = byId(id);
+                if (!el) return;
+                el.disabled = !enabled;
+            }
+
+            function setFieldVisible(id, visible) {
+                const el = byId(id);
+                if (!el) return;
+                el.style.display = visible ? "" : "none";
+            }
+
+            function clearScheduleFields() {
+                resetFieldValue("schedule_preset");
+                resetFieldValue("weekly_hours");
+                resetFieldValue("work_days_per_week");
+                resetFieldValue("daily_hours");
+                syncScheduleHiddenFields();
+            }
+
+            function normalizeCityForOptions(rawCity) {
+                const city = (rawCity || "").trim().toLowerCase();
+
+                const map = {
+                    "berlin": "berlin",
+                    "wien": "wien",
+                    "vienna": "wien",
+                    "bergisch gladbach": "bergisch_gladbach",
+                    "düsseldorf": "duesseldorf",
+                    "dusseldorf": "duesseldorf",
+                    "duesseldorf": "duesseldorf",
+                    "frankfurt": "frankfurt",
+                    "hamburg": "hamburg"
+                };
+
+                return map[city] || null;
+            }
+
+            function getContractTypeCode() {
+                const contractType = byId("contract_type")?.value || "";
+                return contractType === "permanent" ? "unbefristet" : "befristet";
+            }
+
+            function getBerlinSubgroupFromHotel(hotelValue) {
+                const value = (hotelValue || "").trim().toLowerCase();
+
+                const subgroupMap = {
+                    "hotel adlon kempinski": "adlon",
+                    "adlon": "adlon",
+                    "grand hyatt berlin": "ghb",
+                    "china club berlin": "ghb",
+                    "kontor haus": "ghb",
+                    "linden palais": "ghb",
+                    "pressehaus podium": "ghb",
+                    "ghb": "ghb"
+                };
+
+                return subgroupMap[value] || null;
+            }
+
+            function getAllowedBerlinRoles(contractType, subgroup) {
+                if (contractType === "befristet") {
+                    return [
+                        { value: "Floor Supervisor", label: "Floor Supervisor" },
+                        { value: "Glasreiniger", label: "Glasreiniger" },
+                        { value: "Hausmann", label: "Hausmann" },
+                        { value: "HSK", label: "HSK" },
+                        { value: "Minibar", label: "Minibar" },
+                        { value: "Minijob", label: "Minijob" },
+                        { value: "NR", label: "NR" },
+                        { value: "Public Area", label: "Public Area" },
+                        { value: "Reinigungskraft", label: "Reinigungskraft" },
+                        { value: "STW", label: "STW" },
+                        { value: "other", label: "Other" }
+                    ];
+                }
+
+                if (contractType === "unbefristet" && subgroup === "adlon") {
+                    return [
+                        { value: "Floor Supervisor", label: "Supervisor" },
+                        { value: "Glasreiniger", label: "Glasreiniger" },
+                        { value: "Hausmann", label: "Hausmann" },
+                        { value: "HSK", label: "HSK" },
+                        { value: "Minibar", label: "Minibar" },
+                        { value: "NR", label: "NR" },
+                        { value: "Public Area", label: "Public Area" },
+                        { value: "STW", label: "STW" },
+                        { value: "other", label: "Other" }
+                    ];
+                }
+
+                if (contractType === "unbefristet" && subgroup === "ghb") {
+                    return [
+                        { value: "Floor Supervisor", label: "Supervisor" },
+                        { value: "Glasreiniger", label: "Glasreiniger" },
+                        { value: "Hausmann", label: "Hausmann" },
+                        { value: "HSK", label: "HSK" },
+                        { value: "Minibar", label: "Minibar" },
+                        { value: "NR", label: "NR" },
+                        { value: "Public Area", label: "Public Area" },
+                        { value: "other", label: "Other" }
+                    ];
+                }
+
+                return [];
+            }
+            const EMPLOYMENT_TYPE_PRESETS = {
+                "Vollzeit": ["40|5|8"],
+                "Teilzeit": ["20|5|4", "25|5|5", "30|5|6", "32|4|8", "35|5|7"],
+                "Minijob": ["20|5|4"]
+            };
+            function getEmploymentTypeValue() {
+                return byId("employment_type")?.value || "";
+            }
+
+            const CITY_OCCUPATION_OPTIONS = {
                 wien: [
                     { value: "Reinigungskraft", label: "Reinigungskraft" },
                     { value: "Reinigungskraft TD", label: "Reinigungskraft TD" },
@@ -900,7 +832,6 @@
                     { value: "Quality Manager", label: "Quality Manager" },
                     { value: "other", label: "Other" }
                 ],
-
                 bergisch_gladbach: [
                     { value: "Hausmann", label: "Hausmann" },
                     { value: "HSK", label: "HSK" },
@@ -908,544 +839,754 @@
                     { value: "NR", label: "NR" },
                     { value: "other", label: "Other" }
                 ],
-
                 duesseldorf: [
                     { value: "NR", label: "NR" },
                     { value: "STW", label: "STW" },
                     { value: "other", label: "Other" }
                 ],
-
                 frankfurt: [
                     { value: "NR", label: "NR" },
                     { value: "Public Area", label: "Public Area" },
                     { value: "other", label: "Other" }
                 ],
-
                 hamburg: [
                     { value: "NR", label: "NR" },
                     { value: "Public Area", label: "Public Area" },
                     { value: "other", label: "Other" }
                 ]
             };
-            function normalizeCityForOptions(rawCity) {
-                const city = (rawCity || '').trim().toLowerCase();
 
-                const map = {
-                    'berlin': 'berlin',
-                    'wien': 'wien',
-                    'vienna': 'wien',
-                    'bergisch gladbach': 'bergisch_gladbach',
-                    'düsseldorf': 'duesseldorf',
-                    'dusseldorf': 'duesseldorf',
-                    'duesseldorf': 'duesseldorf',
-                    'frankfurt': 'frankfurt',
-                    'hamburg': 'hamburg'
-                };
+            const CITY_ROLE_SCHEDULES = {
 
-                return map[city] || null;
+                berlin: {
+                    "hsk": ["30|5|6", "40|5|8"],
+                    "nr": ["30|5|6", "40|5|8"],
+                    "stw": ["40|5|8"],
+                    "minibar": ["40|5|8"],
+                    "glasreiniger": ["40|5|8"],
+                    "hausmann": ["40|5|8"],
+                    "public area": ["40|5|8"],
+                    "reinigungskraft": ["30|5|6", "40|5|8"],
+                    "floor supervisor": ["40|5|8"],
+                    "minijob": ["20|5|4"]
+                },
+                wien: {
+                    "reinigungskraft": ["20|5|4"],
+                    "reinigungskraft td": ["20|5|4", "25|5|5", "30|5|6"],
+                    "reinigungskraft pa": ["32|4|8"],
+                    "reinigungskraft hm": ["40|5|8"],
+                    "reinigungskraft nr": ["40|5|8"],
+                    "reinigungskraft public": ["40|5|8"],
+                    "reinigungskraft stw": ["40|5|8"],
+                    "zimmermädchen": ["24|3|8", "30|5|6", "32|4|8", "40|5|8"],
+                    "hsk supervisor": ["32|4|8", "40|5|8"],
+                    "hsk manager": ["40|5|8"],
+                    "ass. hsk manager": ["40|5|8"],
+                    "stw supervisor": ["40|5|8"],
+                    "stw manager": ["40|5|8"],
+                    "objektleitung nr": ["40|5|8"],
+                    "quality manager": ["40|5|8"]
+                }
+            };
+
+            const ALL_SCHEDULE_PRESETS = [
+                { value: "", label: "Choose Preset" },
+                { value: "20|5|4", label: "20 hrs / 5 days / 4 hrs/day" },
+                { value: "24|3|8", label: "24 hrs / 3 days / 8 hrs/day" },
+                { value: "25|5|5", label: "25 hrs / 5 days / 5 hrs/day" },
+                { value: "30|5|6", label: "30 hrs / 5 days / 6 hrs/day" },
+                { value: "32|4|8", label: "32 hrs / 4 days / 8 hrs/day" },
+                { value: "35|5|7", label: "35 hrs / 5 days / 7 hrs/day" },
+                { value: "40|5|8", label: "40 hrs / 5 days / 8 hrs/day" },
+                { value: "other", label: "Custom" }
+            ];
+
+            function restoreFormStateFromServer() {
+                const fd = window.__FORM_DATA__ || {};
+
+                const workCitySelect = byId("work_city_select");
+                const hotelSelect = byId("hotel_name_select");
+                const employmentType = byId("employment_type");
+                const contractType = byId("contract_type");
+
+                if (workCitySelect && fd.work_city) {
+                    const cityOptions = [...workCitySelect.options].map(o => o.value.toLowerCase());
+                    const targetCity = String(fd.work_city).toLowerCase();
+
+                    const matchingCity = [...workCitySelect.options].find(
+                        o => o.value.toLowerCase() === targetCity
+                    );
+
+                    if (matchingCity) {
+                        workCitySelect.value = matchingCity.value;
+                    } else {
+                        workCitySelect.value = "other";
+                    }
+
+                    window.handleWorkCityChange(workCitySelect);
+                }
+
+                if (contractType && fd.contract_type) {
+                    contractType.disabled = false;
+                    contractType.value = fd.contract_type;
+                    window.handleContractDurationChange(contractType);
+                }
+
+                if (hotelSelect && fd.hotel_name_select) {
+                    hotelSelect.value = fd.hotel_name_select;
+                    window.handleHotelNameChange(hotelSelect);
+                }
+
+                if (employmentType && fd.employment_type) {
+                    employmentType.value = fd.employment_type;
+                }
+
+                if (fd.occupation) {
+                    const occupationInput = byId("occupation_input");
+                    const occupationSelect = byId("occupation_select");
+
+                    if (occupationSelect) {
+                        const match = [...occupationSelect.options].find(o => o.value === fd.occupation);
+                        if (match) {
+                            occupationSelect.value = fd.occupation;
+                            window.handleOccupationChange(occupationSelect);
+                        } else if (occupationInput) {
+                            occupationSelect.value = "other";
+                            occupationInput.style.display = "block";
+                            occupationInput.value = fd.occupation;
+                        }
+                    }
+                }
+
+                if (fd.weekly_hours || fd.work_days_per_week || fd.daily_hours) {
+                    syncScheduleHiddenFields();
+                }
+
+                window.updateContractPreview();
             }
-            
-            function populateOccupationOptions(cityKey) {
-                const occupationSelect = byId('occupation_select');
-                const occupationInput = byId('occupation_input');
-                if (!occupationSelect || !occupationInput) return;
 
-                const options = CITY_OCCUPATION_OPTIONS[cityKey] || [
-                    { value: "", label: "Choose Occupation" },
-                    { value: "other", label: "Other" }
-                ];
+            function populateOccupationOptions() {
+                const occupationSelect = byId("occupation_select");
+                const occupationInput = byId("occupation_input");
+                const workCityInput = byId("work_city_input");
+                const hotelSelect = byId("hotel_name_select");
 
-                const currentValue = occupationInput.value || occupationSelect.value || '';
+                if (!occupationSelect || !occupationInput || !workCityInput) return;
 
-                occupationSelect.innerHTML = '';
+                const cityKey = normalizeCityForOptions(workCityInput.value);
+                const contractTypeCode = getContractTypeCode();
+                const subgroup = getBerlinSubgroupFromHotel(hotelSelect?.value || "");
 
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = 'Choose Occupation';
+                let options = [];
+
+                if (cityKey === "berlin") {
+                    options = getAllowedBerlinRoles(contractTypeCode, subgroup);
+                } else {
+                    options = CITY_OCCUPATION_OPTIONS[cityKey] || [
+                        { value: "other", label: "Other" }
+                    ];
+                }
+
+                const currentValue = occupationInput.value || occupationSelect.value || "";
+
+                occupationSelect.innerHTML = "";
+
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.textContent = "Choose Occupation";
                 occupationSelect.appendChild(defaultOption);
 
                 options.forEach(opt => {
-                    const option = document.createElement('option');
+                    const option = document.createElement("option");
                     option.value = opt.value;
                     option.textContent = opt.label;
                     occupationSelect.appendChild(option);
                 });
 
+                const stillValid = options.some(opt => opt.value === currentValue);
 
-                /*Is the previously selected occupation still inside the newly allowed list*/
-                const matching = options.find(opt => opt.value === currentValue);
-                if (matching) {
-                    occupationSelect.value = matching.value;
-                    occupationInput.style.display = 'none';
-                    occupationInput.value = matching.value;
+                if (stillValid) {
+                    occupationSelect.value = currentValue;
+                    occupationInput.style.display = "none";
+                    occupationInput.value = currentValue;
                 } else {
-                    occupationSelect.value = '';
-                    occupationInput.value = '';
-                    occupationInput.style.display = 'none';
+                    occupationSelect.value = "";
+                    occupationInput.value = "";
+                    occupationInput.style.display = "none";
                 }
             }
-            const CITY_ROLE_SCHEDULES ={
 
-                wien: {
-                    'reinigungskraft': ['20|5|4'],
-                    'reinigungskraft td': ['20|5|4', '25|5|5', '30|5|6'],
-                    'reinigungskraft pa': ['32|4|8'],
-                    'reinigungskraft hm': ['40|5|8'],
-                    'reinigungskraft nr': ['40|5|8'],
-                    'reinigungskraft public': ['40|5|8'],
-                    'reinigungskraft stw': ['40|5|8'],
-                    'zimmermädchen': ['24|3|8', '30|5|6', '32|4|8', '40|5|8'],
-                    'hsk supervisor': ['32|4|8', '40|5|8'],
-                    'hsk manager': ['40|5|8'],
-                    'ass. hsk manager': ['40|5|8'],
-                    'stw supervisor': ['40|5|8'],
-                    'stw manager': ['40|5|8'],
-                    'objektleitung nr': ['40|5|8'],
-                    'quality manager': ['40|5|8']
-                }
-            };
 
-            const ALL_SCHEDULE_PRESETS = [
-                { value: '', label: 'Choose Preset' },
-                { value: '20|5|4', label: '20 hrs / 5 days / 4 hrs/day' },
-                { value: '24|3|8', label: '24 hrs / 3 days / 8 hrs/day' },
-                { value: '25|5|5', label: '25 hrs / 5 days / 5 hrs/day' },
-                { value: '30|5|6', label: '30 hrs / 5 days / 6 hrs/day' },
-                { value: '32|4|8', label: '32 hrs / 4 days / 8 hrs/day' },
-                { value: '35|5|7', label: '35 hrs / 5 days / 7 hrs/day' },
-                { value: '40|5|8', label: '40 hrs / 5 days / 8 hrs/day' },
-                { value: 'other', label: 'Custom' }
-            ];
-            
-
-            /* Updates the schedule dropdown based on selected city and occupation */
-            function updateScheduleOptionsForSelection(){
-                const cityRaw = byId('work_city_input')?.value || '';
-                const occupationRaw  = byId('occupation_input')?.value || '';
-                const presetSelect = byId('schedule_preset');
+            function updateScheduleOptionsForSelection() {
+                const cityRaw = byId("work_city_input")?.value || "";
+                const occupationRaw = byId("occupation_input")?.value || "";
+                const employmentType = getEmploymentTypeValue();
+                const presetSelect = byId("schedule_preset");
 
                 if (!presetSelect) return;
 
                 const cityKey = normalizeCityForOptions(cityRaw);
-                const occupationKey  = occupationRaw.trim().toLowerCase();
+                const occupationKey = occupationRaw.trim().toLowerCase();
 
-                let allowed = null;
+                let allowedByRole = null;
+                let allowedByEmployment = null;
 
                 if (cityKey && CITY_ROLE_SCHEDULES[cityKey] && CITY_ROLE_SCHEDULES[cityKey][occupationKey]) {
-                allowed = CITY_ROLE_SCHEDULES[cityKey][occupationKey];
+                    allowedByRole = CITY_ROLE_SCHEDULES[cityKey][occupationKey];
                 }
 
-                const previousValue = presetSelect.value;
-                presetSelect.innerHTML = '';
+                if (employmentType && EMPLOYMENT_TYPE_PRESETS[employmentType]) {
+                    allowedByEmployment = EMPLOYMENT_TYPE_PRESETS[employmentType];
+                }
 
                 let filteredOptions = ALL_SCHEDULE_PRESETS;
 
-                if (allowed) {
-                    filteredOptions = ALL_SCHEDULE_PRESETS.filter(opt => {
-                        return opt.value === '' || opt.value === 'other' || allowed.includes(opt.value);
-                    });
+                if (allowedByRole && allowedByEmployment) {
+                    filteredOptions = ALL_SCHEDULE_PRESETS.filter(opt =>
+                        opt.value === "" ||
+                        opt.value === "other" ||
+                        (allowedByRole.includes(opt.value) && allowedByEmployment.includes(opt.value))
+                    );
+                } else if (allowedByRole) {
+                    filteredOptions = ALL_SCHEDULE_PRESETS.filter(opt =>
+                        opt.value === "" || opt.value === "other" || allowedByRole.includes(opt.value)
+                    );
+                } else if (allowedByEmployment) {
+                    filteredOptions = ALL_SCHEDULE_PRESETS.filter(opt =>
+                        opt.value === "" || opt.value === "other" || allowedByEmployment.includes(opt.value)
+                    );
                 }
 
-                filteredOptions.forEach ( opt=> {
-                    const option = document.createElement('option');
+                const previousValue = presetSelect.value;
+                presetSelect.innerHTML = "";
+
+                filteredOptions.forEach(opt => {
+                    const option = document.createElement("option");
                     option.value = opt.value;
                     option.textContent = opt.label;
                     presetSelect.appendChild(option);
                 });
-                
 
-                /*checks whether the previously selected preset still exists in newly allowed options */
-                const stillValid = filteredOptions.some( opt => opt.value === previousValue);
-                presetSelect.value = stillValid ? previousValue : '';
+                const stillValid = filteredOptions.some(opt => opt.value === previousValue);
+                presetSelect.value = stillValid ? previousValue : "";
 
-                if (! stillValid) {
-                    const weeklyInput = byId('weekly_hours');
-                    const daysInput = byId('work_days_per_week');
-                    const dailyInput = byId('daily_hours');
-
-                    if (weeklyInput) weeklyInput.value = '';
-                    if (daysInput) daysInput.value = '';
-                    if (dailyInput) dailyInput.value = '';
+                if (!stillValid) {
+                    resetFieldValue("weekly_hours");
+                    resetFieldValue("work_days_per_week");
+                    resetFieldValue("daily_hours");
                 }
+
+                syncScheduleHiddenFields();
             }
 
+            function syncScheduleHiddenFields() {
+                const weekly = byId("weekly_hours")?.value || "";
+                const days = byId("work_days_per_week")?.value || "";
+                const daily = byId("daily_hours")?.value || "";
 
+                if (byId("weekly_hours_hidden")) byId("weekly_hours_hidden").value = weekly;
+                if (byId("work_days_per_week_hidden")) byId("work_days_per_week_hidden").value = days;
+                if (byId("daily_hours_hidden")) byId("daily_hours_hidden").value = daily;
+            }
 
-            /* Why the function matters so much
+            window.handleWorkCityChange = function (select) {
+                const input = byId("work_city_input");
+                const hotelSelect = byId("hotel_name_select");
+                const hotelInput = byId("hotel_name_input");
+                const selectedCity = (select.value || "").toLowerCase();
 
-                This function is now the trigger for the entire chain.
-
-                When city changes, it causes:
-
-                city input update
-                hotel logic update
-                occupation dropdown rebuild
-                schedule preset filtering
-                contract preview refresh
-
-                So city is now the top-level controller.
-
-                That is exactly how it should be.   */
-
-            window.handleWorkCityChange = function(select) {
-                const input = byId('work_city_input');
-                const hotelSelect = byId('hotel_name_select');
-                const hotelInput = byId('hotel_name_input');
                 if (!input) return;
 
-                if (select.value === 'other') {
-                    input.style.display = 'block';
-                    input.value = '';
+                if (select.value === "other") {
+                    input.style.display = "block";
+                    input.value = "";
                     input.focus();
                 } else {
-                    input.style.display = 'none';
+                    input.style.display = "none";
                     input.value = select.value;
                 }
 
-                const selectedCity = (select.value || '').toLowerCase();
-                const isBerlin = selectedCity === 'berlin';
+                // Reset dependent fields
+                resetFieldValue("contract_type");
+                resetFieldValue("hotel_name_select");
+                resetFieldValue("hotel_name_input");
+                resetFieldValue("occupation_select");
+                resetFieldValue("occupation_input");
+                clearScheduleFields();
+
+                setFieldEnabled("contract_type", !!input.value);
+                setFieldEnabled("occupation_select", false);
+                setFieldEnabled("schedule_preset", false);
+
+                const isBerlin = selectedCity === "berlin";
+                const isWien = selectedCity === "wien" || selectedCity === "vienna";
+
+                const berlinHotels = [
+                    "Hotel Adlon Kempinski",
+                    "Grand Hyatt Berlin",
+                    "China Club Berlin",
+                    "Kontor Haus",
+                    "Linden Palais",
+                    "Pressehaus Podium"
+                ];
+
+                const wienHotels = [
+                    "Hyatt Regency Vienna",
+                    "Park Hyatt Vienna"
+                ];
+
+                const showHotel = isBerlin || isWien;
+                setFieldVisible("hotel_field", showHotel);
 
                 if (hotelSelect) {
-                    hotelSelect.disabled = false;
-                    hotelSelect.style.opacity = '1';
                     Array.from(hotelSelect.options).forEach(opt => {
-                        opt.disabled = !isBerlin && opt.value !== 'other' && opt.value !== '';
-                    });
-
-                    if (!isBerlin) {
-                        hotelSelect.value = '';
-                        if (hotelInput) {
-                            hotelInput.style.display = 'none';
-                            hotelInput.value = '';
+                        if (opt.value === "" || opt.value === "other") {
+                            opt.style.display = "block";
+                            return;
                         }
-                    }
+
+                        if (isBerlin) {
+                            opt.style.display = berlinHotels.includes(opt.value) ? "block" : "none";
+                            return;
+                        }
+
+                        if (isWien) {
+                            opt.style.display = wienHotels.includes(opt.value) ? "block" : "none";
+                            return;
+                        }
+
+                        opt.style.display = "none";
+                    });
                 }
 
-                /* Take chosen city and convert it to standard key like wien, berlin, etc.*/
-                const cityKey = normalizeCityForOptions(input.value);
+                if (hotelInput) {
+                    hotelInput.style.display = "none";
+                    hotelInput.value = "";
+                }
 
-                /*Rebuild occupation dropdown based on chosen city.*/
-                populateOccupationOptions(cityKey);
-                /* Update  schedule options depending on the selected occupdation and city*/
-                updateScheduleOptionsForSelection();
-                window.updateContractPreview();
+                setPreviewText("- select contract type next -");
             };
 
-            window.handleOccupationChange = function(select) {
-                const input = byId('occupation_input');
-                const deptField = byId('department_field');
-                const deptSelect = byId('department_select');
-                const cityRaw = byId('work_city_input')?.value || '';
+            window.handleHotelNameChange = function (select) {
+                const input = byId("hotel_name_input");
+                const cityRaw = byId("work_city_input")?.value || "";
                 const cityKey = normalizeCityForOptions(cityRaw);
-                
-                if (!input || !deptField || !deptSelect) return;
+                const contractType = byId("contract_type")?.value || "";
 
-                if (select.value === 'other') {
-                    input.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                    deptField.style.display = 'none';
-                    deptSelect.value = '';
-
-                } else {
-                    input.style.display = 'none';
-                    input.value = select.value;
-                    if (select.value === 'Reinigungskraft') {
-                        deptField.style.display = 'flex';
-                    } else {
-                        deptField.style.display = 'none';
-                        deptSelect.value = '';
-                    }
-                }
-                updateScheduleOptionsForSelection();
-                window.updateContractPreview();
-            };
-
-            window.handleHotelNameChange = function(select) {
-                const input = byId('hotel_name_input');
                 if (!input) return;
 
-                if (select.value === 'other') {
-                    input.style.display = 'block';
-                    if (!input.value) {
-                        input.focus();
-                    }
+                if (select.value === "other") {
+                    input.style.display = "block";
+                    input.value = "";
+                    input.focus();
                 } else {
-                    input.style.display = 'none';
-                    input.value = '';
+                    input.style.display = "none";
+                    input.value = "";
                 }
 
+                resetFieldValue("occupation_select");
+                resetFieldValue("occupation_input");
+                clearScheduleFields();
+
+                setFieldEnabled("occupation_select", false);
+                setFieldEnabled("schedule_preset", false);
+
+                if (cityKey === "berlin" && contractType === "permanent" && !select.value) {
+                    setPreviewText("- select Berlin hotel/group -");
+                    return;
+                }
+
+                populateOccupationOptions();
+                setFieldEnabled("occupation_select", true);
+                setPreviewText("- select occupation next -");
+            };
+
+            window.handleOccupationChange = function (select) {
+                const input = byId("occupation_input");
+                const deptField = byId("department_field");
+                const deptSelect = byId("department_select");
+
+                if (!input || !deptField || !deptSelect) return;
+
+                clearScheduleFields();
+                setFieldEnabled("schedule_preset", false);
+
+                if (select.value === "other") {
+                    input.style.display = "block";
+                    input.value = "";
+                    input.focus();
+                    deptField.style.display = "none";
+                    deptSelect.value = "";
+                    setPreviewText("- enter occupation manually -");
+                    return;
+                }
+
+                input.style.display = "none";
+                input.value = select.value;
+
+                if (select.value === "Reinigungskraft") {
+                    deptField.style.display = "flex";
+                } else {
+                    deptField.style.display = "none";
+                    deptSelect.value = "";
+                }
+
+                updateScheduleOptionsForSelection();
+                autoSelectDefaultScheduleForEmploymentType();
+                setFieldEnabled("schedule_preset", true);
                 window.updateContractPreview();
             };
-            function syncScheduleHiddenFields(){
-                const weekly = byId('weekly_hours')?.value || '';
-                const days = byId('work_days_per_week')?.value || '';
-                const daily = byId('daily_hours')?.value || '';
 
-                if (byId('weekly_hours_hidden')) byId('weekly_hours_hidden').value = weekly;
-                if (byId('work_days_per_week_hidden')) byId('work_days_per_week_hidden').value = days;
-                if (byId('daily_hours_hidden')) byId('daily_hours_hidden').value = daily;
-            }
+            window.applySchedulePreset = function (select) {
+                const weeklyInput = byId("weekly_hours");
+                const daysInput = byId("work_days_per_week");
+                const dailyInput = byId("daily_hours");
 
-            window.applySchedulePreset = function(select) {
-                const weeklyInput = byId('weekly_hours');
-                const daysInput = byId('work_days_per_week');
-                const dailyInput = byId('daily_hours');
-                const contractSelect = byId('contract_type');
-                if (!weeklyInput || !daysInput || !dailyInput || !contractSelect) return;
+                if (!weeklyInput || !daysInput || !dailyInput) return;
 
-                if (select.value === 'other') {
-                    weeklyInput.readOnly  = false;
-                    daysInput.readOnly  = false;
-                    dailyInput.readOnly  = false;
-                    contractSelect.disabled = false;
-                    weeklyInput.style.opacity = '1';
-                    daysInput.style.opacity = '1';
-                    dailyInput.style.opacity = '1';
-                    contractSelect.style.opacity = '1';
+                if (select.value === "other") {
+                    weeklyInput.readOnly = false;
+                    daysInput.readOnly = false;
+                    dailyInput.readOnly = false;
+
+                    weeklyInput.style.opacity = "1";
+                    daysInput.style.opacity = "1";
+                    dailyInput.style.opacity = "1";
                 } else if (select.value) {
-                    const [weekly, days, daily] = select.value.split('|');
+                    const [weekly, days, daily] = select.value.split("|");
+
                     weeklyInput.value = weekly;
                     daysInput.value = days;
                     dailyInput.value = daily;
-                    weeklyInput.readOnly  = true;
-                    daysInput.readOnly  = true;
-                    dailyInput.readOnly  = true;
-                    contractSelect.disabled = true;
-                    weeklyInput.style.opacity = '0.5';
-                    daysInput.style.opacity = '0.5';
-                    dailyInput.style.opacity = '0.5';
-                    contractSelect.style.opacity = '0.5';
+
+                    weeklyInput.readOnly = true;
+                    daysInput.readOnly = true;
+                    dailyInput.readOnly = true;
+
+                    weeklyInput.style.opacity = "0.85";
+                    daysInput.style.opacity = "0.85";
+                    dailyInput.style.opacity = "0.85";
                 } else {
-                    weeklyInput.readOnly  = true;
-                    daysInput.readOnly  = true;
-                    dailyInput.readOnly  = true;
-                    contractSelect.disabled = true;
-                    weeklyInput.style.opacity = '0.5';
-                    daysInput.style.opacity = '0.5';
-                    dailyInput.style.opacity = '0.5';
-                    contractSelect.style.opacity = '0.5';
+                    weeklyInput.value = "";
+                    daysInput.value = "";
+                    dailyInput.value = "";
+
+                    weeklyInput.readOnly = true;
+                    daysInput.readOnly = true;
+                    dailyInput.readOnly = true;
+
+                    weeklyInput.style.opacity = "0.5";
+                    daysInput.style.opacity = "0.5";
+                    dailyInput.style.opacity = "0.5";
                 }
+
                 syncScheduleHiddenFields();
                 window.updateContractPreview();
             };
 
-            window.calcDailyHours = function() {
-                const weekly = parseFloat(byId('weekly_hours')?.value || '');
-                const days = parseFloat(byId('work_days_per_week')?.value || '');
-                const dailyInput = byId('daily_hours');
+            window.calcDailyHours = function () {
+                const weekly = parseFloat(byId("weekly_hours")?.value || "");
+                const days = parseFloat(byId("work_days_per_week")?.value || "");
+                const dailyInput = byId("daily_hours");
 
                 if (!dailyInput) return;
+
                 if (weekly > 0 && days > 0) {
                     const daily = weekly / days;
                     dailyInput.value = Number.isInteger(daily) ? String(daily) : daily.toFixed(1);
                 }
+
                 syncScheduleHiddenFields();
             };
 
-            window.handleContractDurationChange = function(select) {
-                const endDate = byId('end_date');
-                if (!endDate) return;
+            window.handleContractDurationChange = function (select) {
+                const cityRaw = byId("work_city_input")?.value || "";
+                const cityKey = normalizeCityForOptions(cityRaw);
+                const endDate = byId("end_date");
 
-                if (select.value === 'permanent') {
-                    endDate.value = '';
-                    endDate.disabled = true;
-                    endDate.style.opacity = '0.4';
-                } else {
-                    endDate.disabled = false;
-                    endDate.style.opacity = '1';
+                // Reset dependent fields
+                resetFieldValue("occupation_select");
+                resetFieldValue("occupation_input");
+                clearScheduleFields();
+
+                setFieldEnabled("occupation_select", false);
+                setFieldEnabled("schedule_preset", false);
+
+                if (endDate) {
+                    if (select.value === "permanent") {
+                        endDate.value = "";
+                        endDate.disabled = true;
+                        endDate.style.opacity = "0.4";
+                    } else {
+                        endDate.disabled = false;
+                        endDate.style.opacity = "1";
+                    }
                 }
 
-                window.updateContractPreview();
+                if (!select.value) {
+                    setPreviewText("- select contract type -");
+                    return;
+                }
+
+                // Berlin permanent requires hotel/group first
+                if (cityKey === "berlin" && select.value === "permanent") {
+                    setPreviewText("- select Berlin hotel/group next -");
+                    return;
+                }
+
+                // Berlin temporary can go directly to occupation
+                populateOccupationOptions();
+                setFieldEnabled("occupation_select", true);
+                setPreviewText("- select occupation next -");
             };
 
-            window.autoFillEndDate = function() {
-                const endDate = byId('end_date');
-                const startDate = byId('start_date');
+            window.autoFillEndDate = function () {
+                const endDate = byId("end_date");
+                const startDate = byId("start_date");
+
                 if (!endDate || !startDate || endDate.disabled || !startDate.value) return;
 
                 const start = new Date(startDate.value);
                 const end = new Date(start);
                 end.setFullYear(end.getFullYear() + 1);
                 end.setDate(end.getDate() - 1);
-                endDate.value = end.toISOString().split('T')[0];
+                endDate.value = end.toISOString().split("T")[0];
             };
 
-            window.updateContractPreview = function() {
-                const cityInput = byId('work_city_input');
-                const hotelSelect = byId('hotel_name_select');
-                const hotelInput = byId('hotel_name_input');
-                const occupationInput = byId('occupation_input');
-                const contractType = byId('contract_type');
-                const weeklyInput = byId('weekly_hours');
-                const daysInput = byId('work_days_per_week');
-                const dailyInput = byId('daily_hours');
+            window.updateContractPreview = function () {
+                const cityInput = byId("work_city_input");
+                const hotelSelect = byId("hotel_name_select");
+                const hotelInput = byId("hotel_name_input");
+                const occupationInput = byId("occupation_input");
+                const contractType = byId("contract_type");
+                const weeklyInput = byId("weekly_hours");
+                const daysInput = byId("work_days_per_week");
+                const dailyInput = byId("daily_hours");
 
-                if (!cityInput || !hotelSelect || !hotelInput || !occupationInput || !contractType || !weeklyInput || !daysInput || !dailyInput) {
-                    return;
-                }
+                if (!cityInput || !occupationInput || !contractType) return;
 
                 const cityRaw = cityInput.value.trim().toLowerCase();
-                const hotelSelectValue = hotelSelect.value.trim().toLowerCase();
-                const hotelRaw = hotelSelectValue === 'other'
-                    ? hotelInput.value.trim().toLowerCase()
+                const hotelSelectValue = hotelSelect ? hotelSelect.value.trim().toLowerCase() : "";
+                const hotelRaw = hotelSelectValue === "other"
+                    ? (hotelInput?.value || "").trim().toLowerCase()
                     : hotelSelectValue;
+
                 const occRaw = occupationInput.value.trim().toLowerCase();
                 const contractRaw = contractType.value.trim().toLowerCase();
-                const weekly = weeklyInput.value.trim();
-                const days = daysInput.value.trim();
-                const daily = dailyInput.value.trim();
+                const weekly = weeklyInput?.value.trim() || "";
+                const days = daysInput?.value.trim() || "";
+                const daily = dailyInput?.value.trim() || "";
 
                 if (!cityRaw || !occRaw || !contractRaw) {
-                    setPreviewText('- select city, occupation and contract type -');
+                    setPreviewText("- select city, occupation and contract type -");
                     return;
                 }
 
-                const contractCode = contractRaw === 'permanent' ? 'unbefristet' : 'befristet';
-                const subgroupMap = {
-                    'hotel adlon kempinski': 'adlon',
-                    'adlon': 'adlon',
-                    'grand hyatt berlin': 'ghb',
-                    'china club berlin': 'ghb',
-                    'kontor haus': 'ghb',
-                    'linden palais': 'ghb',
-                    'pressehaus podium': 'ghb',
-                    'ghb': 'ghb'
-                };
-                const occupationMap = {
-                    'floor supervisor': 'floor_supervisor',
-                    'hsk': 'hsk',
-                    'hsk supervisor': 'hsk_supervisor',
-                    'hsk manager': 'hsk_manager',
-                    'zimmermÃ¤dchen': 'zimmermaedchen',
-                    'zimmermädchen': 'zimmermaedchen',
-                    'minibar': 'minibar',
-                    'reinigungskraft': 'reinigungskraft',
-                    'glasreiniger': 'glasreiniger',
-                    'public area': 'public_area',
-                    'hausmann': 'hausmann',
-                    'stw': 'stw',
-                    'nr': 'nr'
-                };
                 const cityMap = {
-                    'berlin': 'berlin',
-                    'bergisch gladbach': 'bergisch_gladbach',
-                    'dÃ¼sseldorf': 'duesseldorf',
-                    'düsseldorf': 'duesseldorf',
-                    'dusseldorf': 'duesseldorf',
-                    'duesseldorf': 'duesseldorf',
-                    'frankfurt': 'frankfurt',
-                    'hamburg': 'hamburg',
-                    'mÃ¼nchen': 'muenchen',
-                    'münchen': 'muenchen',
-                    'munchen': 'muenchen',
-                    'muenchen': 'muenchen',
-                    'kÃ¶ln': 'koeln',
-                    'köln': 'koeln',
-                    'koeln': 'koeln',
-                    'wien': 'wien',
-                    'vienna': 'wien'
+                    "berlin": "berlin",
+                    "bergisch gladbach": "bergisch_gladbach",
+                    "düsseldorf": "duesseldorf",
+                    "dusseldorf": "duesseldorf",
+                    "duesseldorf": "duesseldorf",
+                    "frankfurt": "frankfurt",
+                    "hamburg": "hamburg",
+                    "münchen": "muenchen",
+                    "munchen": "muenchen",
+                    "muenchen": "muenchen",
+                    "köln": "koeln",
+                    "koeln": "koeln",
+                    "wien": "wien",
+                    "vienna": "wien"
                 };
 
-                const subgroup = subgroupMap[hotelRaw] || null;
-                const occupationCode = occupationMap[occRaw] || occRaw.replace(/\s+/g, '_');
+                const occupationMap = {
+                    "floor supervisor": "floor_supervisor",
+                    "hsk": "hsk",
+                    "hsk supervisor": "hsk_supervisor",
+                    "hsk manager": "hsk_manager",
+                    "minibar": "minibar",
+                    "minijob": "minijob",
+                    "reinigungskraft": "reinigungskraft",
+                    "glasreiniger": "glasreiniger",
+                    "public area": "public_area",
+                    "hausmann": "hausmann",
+                    "stw": "stw",
+                    "nr": "nr",
+                    "zimmermädchen": "zimmermaedchen",
+                    "zimmermadchen": "zimmermaedchen",
+                    "zimmermaedchen": "zimmermaedchen",
+                    "reinigungskraft td": "reinigungskraft_td",
+                    "reinigungskraft pa": "reinigungskraft_pa",
+                    "reinigungskraft hm": "reinigungskraft_hm",
+                    "reinigungskraft nr": "reinigungskraft_nr",
+                    "reinigungskraft public": "reinigungskraft_public",
+                    "reinigungskraft stw": "reinigungskraft_stw",
+                    "ass. hsk manager": "ass_hsk_manager",
+                    "stw supervisor": "stw_supervisor",
+                    "stw manager": "stw_manager",
+                    "objektleitung nr": "objektleitung_nr",
+                    "quality manager": "quality_manager"
+                };
+
                 const cityCode = cityMap[cityRaw];
+                const contractCode = contractRaw === "permanent" ? "unbefristet" : "befristet";
+                const occupationCode = occupationMap[occRaw] || occRaw.replace(/\s+/g, "_");
+                const subgroup = getBerlinSubgroupFromHotel(hotelRaw);
 
                 if (!cityCode) {
-                    setPreviewText('- unknown city -');
+                    setPreviewText("- unknown city -");
                     return;
                 }
 
-                if (['bergisch_gladbach', 'duesseldorf', 'frankfurt', 'hamburg', 'muenchen', 'koeln', 'wien'].includes(cityCode) && (!weekly || !days || !daily)) {
-                    setPreviewText('- also select schedule preset or fill weekly/days/hours -');
-                    return;
-                }
+                let filename = "-";
 
-                let filename = '-';
-                if (cityCode === 'berlin') {
-                    if (contractCode === 'unbefristet' && subgroup) {
-                        filename = `berlin_AV_${occupationCode}_${contractCode}_${subgroup}_40.docx`;
-                    } else {
-                        filename = `ASN_AV_berlin_${occupationCode}_${contractCode}_40.docx`;
+                if (cityCode === "berlin") {
+                    if (contractCode === "unbefristet" && !subgroup) {
+                        setPreviewText("- select Berlin hotel/group first -");
+                        return;
                     }
-                } else if (cityCode === 'wien') {
-                    filename = `ASN_AV_wien_${occupationCode}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
 
+                    if (contractCode === "unbefristet") {
+                        filename = `ASN_AV_berlin_${occupationCode}_unbefristet_${subgroup}_40.docx`;
+                    } else {
+                        filename = `ASN_AV_berlin_${occupationCode}_befristet_40.docx`;
+                    }
+                } else if (cityCode === "wien") {
+                    if (!weekly || !days || !daily) {
+                        setPreviewText("- also select schedule preset -");
+                        return;
+                    }
+                    filename = `ASN_AV_wien_${occupationCode}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
                 } else {
+                    if (!weekly || !days || !daily) {
+                        setPreviewText("- also select schedule preset -");
+                        return;
+                    }
                     filename = `ASN_AV_${cityCode}_${occupationCode}_${contractCode}_${weekly}_Std_${days}_Tage_${daily}_Std.docx`;
                 }
 
                 setPreviewText(filename);
             };
+            function autoSelectDefaultScheduleForEmploymentType() {
+                const presetSelect = byId("schedule_preset");
+                const employmentType = getEmploymentTypeValue();
+
+                if (!presetSelect || !employmentType) return;
+
+                const availableValues = [...presetSelect.options].map(o => o.value);
+
+                if (employmentType === "Vollzeit" && availableValues.includes("40|5|8")) {
+                    presetSelect.value = "40|5|8";
+                    window.applySchedulePreset(presetSelect);
+                    return;
+                }
+
+                if (employmentType === "Teilzeit") {
+                    const teilzeitDefaultOrder = ["30|5|6", "25|5|5", "20|5|4", "32|4|8", "35|5|7"];
+                    const found = teilzeitDefaultOrder.find(v => availableValues.includes(v));
+                    if (found) {
+                        presetSelect.value = found;
+                        window.applySchedulePreset(presetSelect);
+                    }
+                    return;
+                }
+
+                if (employmentType === "Minijob" && availableValues.includes("20|5|4")) {
+                    presetSelect.value = "20|5|4";
+                    window.applySchedulePreset(presetSelect);
+                }
+            }
 
             function initPreviewBindings() {
-                const weeklyInput = byId('weekly_hours');
-                const daysInput = byId('work_days_per_week');
-                const hotelSelect = byId('hotel_name_select');
-                const hotelInput = byId('hotel_name_input');
-                const workCitySelect = byId('work_city_select');
-                const workCityInput = byId('work_city_input');
-                const occupationSelect = byId('occupation_select');
-                const occupationInput = byId('occupation_input');
-                const contractType = byId('contract_type');
-                const schedulePreset = byId('schedule_preset');
+                const weeklyInput = byId("weekly_hours");
+                const daysInput = byId("work_days_per_week");
+                const hotelSelect = byId("hotel_name_select");
+                const hotelInput = byId("hotel_name_input");
+                const workCitySelect = byId("work_city_select");
+                const workCityInput = byId("work_city_input");
+                const occupationSelect = byId("occupation_select");
+                const occupationInput = byId("occupation_input");
+                const contractType = byId("contract_type");
+                const schedulePreset = byId("schedule_preset");
+                const employmentType = byId("employment_type");
+                if (employmentType) {
+                    employmentType.addEventListener("change", function () {
+                        clearScheduleFields();
+                        updateScheduleOptionsForSelection();
+                        setFieldEnabled("schedule_preset", !!byId("occupation_input")?.value);
+                        window.updateContractPreview();
+                    });
+                }
 
                 if (weeklyInput) {
-                    weeklyInput.addEventListener('change', window.calcDailyHours);
-                    weeklyInput.addEventListener('input', window.calcDailyHours);
-                    weeklyInput.addEventListener('change', window.updateContractPreview);
-                    weeklyInput.addEventListener('input', window.updateContractPreview);
+                    weeklyInput.addEventListener("change", window.calcDailyHours);
+                    weeklyInput.addEventListener("input", window.calcDailyHours);
+                    weeklyInput.addEventListener("change", window.updateContractPreview);
+                    weeklyInput.addEventListener("input", window.updateContractPreview);
                 }
+
                 if (daysInput) {
-                    daysInput.addEventListener('change', window.calcDailyHours);
-                    daysInput.addEventListener('input', window.calcDailyHours);
-                    daysInput.addEventListener('change', window.updateContractPreview);
-                    daysInput.addEventListener('input', window.updateContractPreview);
+                    daysInput.addEventListener("change", window.calcDailyHours);
+                    daysInput.addEventListener("input", window.calcDailyHours);
+                    daysInput.addEventListener("change", window.updateContractPreview);
+                    daysInput.addEventListener("input", window.updateContractPreview);
                 }
+
                 if (hotelSelect) {
-                    window.handleHotelNameChange(hotelSelect);
-                    hotelSelect.addEventListener('change', window.updateContractPreview);
+                    hotelSelect.addEventListener("change", function () {
+                        window.handleHotelNameChange(this);
+                    });
                 }
+
                 if (hotelInput) {
-                    hotelInput.addEventListener('input', window.updateContractPreview);
+                    hotelInput.addEventListener("input", window.updateContractPreview);
                 }
+
                 if (workCitySelect) {
-                    window.handleWorkCityChange(workCitySelect);
-                    workCitySelect.addEventListener('change', function() {
+                    workCitySelect.addEventListener("change", function () {
                         window.handleWorkCityChange(this);
                     });
-                }           
+                }
 
                 if (workCityInput) {
-                    workCityInput.addEventListener('input', window.updateContractPreview);
+                    workCityInput.addEventListener("input", function () {
+                        populateOccupationOptions();
+                        updateScheduleOptionsForSelection();
+                        window.updateContractPreview();
+                    });
                 }
-                
-                if (occupationSelect) {
-                    window.handleOccupationChange(occupationSelect);
-                    occupationSelect.addEventListener('change', function(){
-                        window.handleOccupationChange(this);
 
+                if (occupationSelect) {
+                    occupationSelect.addEventListener("change", function () {
+                        window.handleOccupationChange(this);
                     });
                 }
 
                 if (occupationInput) {
-                    occupationInput.addEventListener('input', window.updateContractPreview);
+                    occupationInput.addEventListener("input", window.updateContractPreview);
                 }
+
                 if (contractType) {
-                    window.handleContractDurationChange(contractType);
-                    contractType.addEventListener('change', window.updateContractPreview);
+                    contractType.addEventListener("change", function () {
+                        window.handleContractDurationChange(this);
+                    });
                 }
+
                 if (schedulePreset) {
-                    schedulePreset.addEventListener('change', window.updateContractPreview);
+                    schedulePreset.addEventListener("change", function () {
+                        window.applySchedulePreset(this);
+                    });
                 }
+
                 syncScheduleHiddenFields();
+                restoreFormStateFromServer();
+                updateScheduleOptionsForSelection();
                 window.updateContractPreview();
             }
-            
 
             initPreviewBindings();
         })();
-    </script>
+</script>
 
     <script>
         // ── Shared dim mode (synced via localStorage with index.html) ──

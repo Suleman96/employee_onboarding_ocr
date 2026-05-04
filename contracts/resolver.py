@@ -507,8 +507,20 @@ def resolve_koeln_group_template(attrs: Dict[str, Any]) -> Path:
     if weekly_hours is None:
         raise ValueError("weekly_hours is required for koeln_group templates")
 
-    base_dir = CONTRACTS_DIR / "koeln_group" / city
-
+    # folder routing
+    city_root = CONTRACTS_DIR / "koeln_group" / city 
+    
+    if city == "hamburg" or city == "dusseldorf":
+        base_dir = city_root
+    else:
+        if contract_type == "befristet":
+            base_dir = city_root / "befristet"
+        elif contract_type == "unbefristet":
+            base_dir = city_root / "unbefristet"
+        else:
+            raise ValueError(f"Unsupported contract type for koeln_group: {contract_type}")
+            
+    
     role_token = _KOELN_GROUP_ROLE_TOKEN.get(occupation)
     if role_token is None:
         raise ValueError(f"No koeln_group template mapping for occupation '{occupation}'")

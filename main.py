@@ -100,6 +100,7 @@ def home(request: Request, db:Session=Depends(get_db)):
 @app.post("/api/employees/n8n-intake")
 def create_employee_from_n8n(payload: EmployeeCreate, db: Session = Depends(get_db)):
     try:
+        
         new_employee = Employee(
             first_name=payload.first_name,
             middle_name=payload.middle_name,
@@ -193,15 +194,18 @@ def create_employee_from_n8n(payload: EmployeeCreate, db: Session = Depends(get_
         raise HTTPException(status_code=500, detail=str(e))
         
         
-
 @app.get("/upload", response_class=HTMLResponse)
 def upload_page(request: Request):
-    return templates.TemplateResponse(request=request, name="upload.html")
-
-
+    return templates.TemplateResponse(
+        request=request,
+        name="upload.html",
+        context={"form_data": {}}
+    )
 
 @app.post("/employees/new")
+
 def create_employee(
+    request: Request,
     first_name: str = Form(None),
     middle_name: str = Form(None),
     last_name: str = Form(None),
@@ -211,7 +215,7 @@ def create_employee(
     country_of_birth: str = Form(None),
     nationality: str = Form(None),
     marital_status: str = Form(None),
-    
+
     ausweis_number: str = Form(None),
     ausweis_expiry_date: str = Form(None),
     reise_pass_number: str = Form(None),
@@ -220,7 +224,7 @@ def create_employee(
     working_permit_expiry: str = Form(None),
     visa_number: str = Form(None),
     visa_expiry: str = Form(None),
-    
+
     street_and_house_number: str = Form(None),
     phone: str = Form(None),
     emergency_contact_name: str = Form(None),
@@ -229,18 +233,18 @@ def create_employee(
     city: str = Form(None),
     email: str = Form(None),
     country: str = Form("Deutschland"),
-    
+
     krankenkasse: str = Form(None),
     krankenkasse_nummer: str = Form(None),
     steuer_id: str = Form(None),
     steuerklasse: int = Form(None),
     sozialversicherungsnummer: str = Form(None),
-    
+
     bank_name: str = Form(None),
     bank_iban: str = Form(None),
     bank_bic: str = Form(None),
     bank_account_holder: str = Form(None),
-    
+
     hotel_name_select: str = Form(None),
     hotel_name_custom: str = Form(None),
     work_city: str = Form(None),
@@ -257,12 +261,93 @@ def create_employee(
     probation_period_months: int = Form(None),
     previous_employer: str = Form(None),
     education_level: str = Form(None),
-    
+
     disabled: bool = Form(None),
     status: str = Form("draft"),
     ordio_id: str = Form(None),
     db: Session = Depends(get_db)
-):    
+):
+    
+    form_data = {
+        "first_name": first_name,
+        "middle_name": middle_name,
+        "last_name": last_name,
+        "gender": gender,
+        "date_of_birth": date_of_birth,
+        "place_of_birth": place_of_birth,
+        "country_of_birth": country_of_birth,
+        "nationality": nationality,
+        "marital_status": marital_status,
+
+        "ausweis_number": ausweis_number,
+        "ausweis_expiry_date": ausweis_expiry_date,
+        "reise_pass_number": reise_pass_number,
+        "reise_pass_expiry_date": reise_pass_expiry_date,
+        "working_permit_number": working_permit_number,
+        "working_permit_expiry": working_permit_expiry,
+        "visa_number": visa_number,
+        "visa_expiry": visa_expiry,
+
+        "street_and_house_number": street_and_house_number,
+        "phone": phone,
+        "emergency_contact_name": emergency_contact_name,
+        "emergency_contact_phone": emergency_contact_phone,
+        "zip_code": zip_code,
+        "city": city,
+        "email": email,
+        "country": country,
+
+        "krankenkasse": krankenkasse,
+        "krankenkasse_nummer": krankenkasse_nummer,
+        "steuer_id": steuer_id,
+        "steuerklasse": steuerklasse,
+        "sozialversicherungsnummer": sozialversicherungsnummer,
+
+        "bank_name": bank_name,
+        "bank_iban": bank_iban,
+        "bank_bic": bank_bic,
+        "bank_account_holder": bank_account_holder,
+
+        "hotel_name_select": hotel_name_select,
+        "hotel_name_custom": hotel_name_custom,
+        "work_city": work_city,
+        "department": department,
+        "employment_type": employment_type,
+        "occupation": occupation,
+        "position_level": position_level,
+        "weekly_hours": weekly_hours,
+        "work_days_per_week": work_days_per_week,
+        "daily_hours": daily_hours,
+        "start_date": start_date,
+        "contract_type": contract_type,
+        "end_date": end_date,
+        "probation_period_months": probation_period_months,
+        "previous_employer": previous_employer,
+        "education_level": education_level,
+
+        "disabled": disabled,
+        "status": status,
+        "ordio_id": ordio_id,
+    }
+    
+    email = email.strip().lower() if email else ""
+    form_data["email"] = email
+
+    existing_employee = None
+
+    if email:
+        existing_employee = db.query(Employee).filter(Employee.email == email).first()
+
+    if existing_employee:
+        return templates.TemplateResponse(
+            request=request,
+            name="upload.html",
+            context={
+                "error_message": f"This email already exists for employee ID {existing_employee.id}. Please open that record and edit it instead.",
+                "form_data": form_data,
+            },
+            status_code=200,
+        )
     new_employee = Employee(
         first_name=first_name,
         middle_name=middle_name,
@@ -273,7 +358,7 @@ def create_employee(
         country_of_birth=country_of_birth,
         nationality=nationality,
         marital_status=marital_status,
-        
+
         ausweis_number=ausweis_number,
         ausweis_expiry_date=ausweis_expiry_date,
         reise_pass_number=reise_pass_number,
@@ -282,7 +367,7 @@ def create_employee(
         working_permit_expiry=working_permit_expiry,
         visa_number=visa_number,
         visa_expiry=visa_expiry,
-        
+
         street_and_house_number=street_and_house_number,
         phone=phone,
         emergency_contact_name=emergency_contact_name,
@@ -291,18 +376,18 @@ def create_employee(
         city=city,
         email=email,
         country=country,
-        
+
         krankenkasse=krankenkasse,
         krankenkasse_nummer=krankenkasse_nummer,
         steuer_id=steuer_id,
         steuerklasse=steuerklasse,
         sozialversicherungsnummer=sozialversicherungsnummer,
-        
+
         bank_name=bank_name,
         bank_iban=bank_iban,
         bank_bic=bank_bic,
         bank_account_holder=bank_account_holder,
-        
+
         work_city=work_city,
         department=department,
         employment_type=employment_type,
@@ -318,29 +403,43 @@ def create_employee(
         probation_period_months=probation_period_months,
         previous_employer=previous_employer,
         education_level=education_level,
-        
+
         disabled=disabled,
         status=status,
         ordio_id=ordio_id,
     )
+
     db.add(new_employee)
-    db.commit()
-    db.refresh(new_employee)
-    
-    audit_entry=AuditLog(
-        action="create",
-        employee_id= new_employee.id,
-        details=f"Created Employee: {new_employee.first_name or ''} {new_employee.last_name or ''}",
-        performed_by="system"
-    )
-    db.add(audit_entry)
-    db.commit()
-    
-    return RedirectResponse(url=f"/review/{new_employee.id}", status_code=303)
+    try:
+        db.commit()
+        db.refresh(new_employee)
 
+        audit_entry = AuditLog(
+            action="create",
+            employee_id=new_employee.id,
+            details=f"Created Employee: {new_employee.first_name or ''} {new_employee.last_name or ''}".strip(),
+            performed_by="system"
+        )
+        db.add(audit_entry)
+        db.commit()
 
+        return RedirectResponse(url=f"/review/{new_employee.id}", status_code=303)
+
+    except IntegrityError:
+        db.rollback()
+        return templates.TemplateResponse(
+            request=request,
+            name="upload.html",
+            context={
+                "error_message": "This email already exists. Please use a different email or edit the existing employee.",
+                "form_data": form_data,
+            },
+            status_code=200,
+        )
+        
 @app.get("/review/{employee_id}", response_class=HTMLResponse)
 def review_employee(employee_id:int, request: Request, db:Session = Depends(get_db)):
+    
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:
         return HTMLResponse(content="<h1>Employee not found</h1>", status_code=404)
