@@ -1,75 +1,76 @@
 import json
-from mistralai.client import Mistral
+import requests
 
-from config import MISTRAL_API_KEY
+from config import OLLAMA_BASE_URL, LOCAL_TEXT_MODEL
 
 
-VERIFICATION_SCHEMA = {
+VERIFICATION_SCHEMA_DESCRIPTION = """
+
+Return a JSON object like:
+
+{
+    "issues": [
+        {
+            "field": "field_name",
+            "problem": "description",
+            "suggestion": "better value or null",
+            "severity" : "error|warning|info"
+        }
+    ],
     
-    "type": "object",
-    "properties": {
-        "issues": {
-            "type": "array",
-            "items": {
-                "type": "object"
-                "properties":{
-                    "field": {"type": "string"},
-                    "problem": {"type": "string"},
-                    "suggestion":  {"type": ["string", "null"]},
-                    "severity": {"type": "string", "enum": ["error", "warning", "info"]}
-                },
-                "required": ["field", "problem", "severity"]
-            }
-        },
-        "corrected_fields": {
-            "type": "object",
-            "additionalProperties": {"type": ["string", "null"]}
-        },
-        "overall_confidence": {
-            "type": "string",
-            "enum": ["high", "medium", "low"]
-        },
-        "ready_for_review": {"type": "boolean"}
+    "corrected_fields": {
+        "field_name" : "value or null"
     },
-    "required": ["issues", "overall_confidence", "ready_for_review"]
+    "overall_confidence": "high|medium|low",
+    "ready_for_review": true
 }
 
-class MistralVerifier:
-    def __init__(self):
-        if not MISTRAL_API_KEY:
-            raise ValueError("MISTRAL_API_KEY is missing")
-        self.client = Mistral(api_key=MISTRAL_API_KEY)
+Rules:
+- steur_id shoudl have 11 digits if present
+- BIC should be 8 or 11 characters long if present
+- date_of_birth should be in the format DD.MM.YYYY
+- place_of_birth must not be confused with current city.
+- do not invent missing data
+"""
 
+class LocalOllamaVerifier:
+    def __init__(self, model_name: str= LOCAL_TEXT_MODEL):
+        self.model_name = model_name
+        
     def verify_extraction(self, original_text: str, extracted: dict) -> dict:
         prompt = f"""
-            Prüfe die extrahierten Mitarbeiterdaten gegen den Originaltext.
-
-            Prüfregeln:
-            - Steuer-ID: genau 11 Ziffern
-            - IBAN: Ländercode + plausible Länge
-            - BIC: 8 oder 11 Zeichen
-            - date_of_birth: DD.MM.YYYY
-            - place_of_birth nicht mit aktueller Stadt verwechseln
-            - nichts erfinden
-
-            Originaltext:
-            {original_text[:4000]}
-
-            Extrahierte Daten:
-            {json.dumps(extracted, ensure_ascii=False)}
-            """
-
-        response = self.client.chat.complete(
-            model="mistral-small-latest",
-            messages=[{"role": "user", "content": prompt}],
-            response_format={
-                "type": "json_schema",
-                "json_schema": {
-                    "name": "VerificationResult",
-                    "schema": VERIFICATION_SCHEMA,
-                    "strict": True
-                }
-            }
+        
+        Yor are a multilingual employee data verification system. 
+        
+        Task:
+        Check the extracted employee data against the original text.model_name
+        Return JSON only.
+        
+        Schema:
+        {VERIFICATION_SCHEMA_DESCRIPTION}
+        
+        Original Text:
+        {original_text[:6000]}
+        
+        Extracted Data:
+        {json.dumps(extracted, ensure_ascii= False)}
+        
+        """
+        
+        response = requests.post(
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json={
+                "model": self.model_name,
+                "prompt": prompt,
+                "stream": False,
+                "format":"json",
+            },
+            timeout=180,
         )
-
-        return json.loads(response.choices[0].message.content)
+        response.raise_dor_status()
+        result = response.json()
+        result = response.json()
+        text = result.get("response", "").strip()
+        
+        return json.loads(text)
+    

@@ -3,17 +3,19 @@
 from pathlib import Path
 import shutil
 import uuid
+import zipfile
 
 from docx import Document
 from PyPDF2 import PdfReader
 from pdf2image import convert_from_path
+import fitz
 
-from config import UPLOADS_DIR, DEFAULT_OCR_ENGINE, DEFAULT_AI_PROVIDER
+from config import ORIGINALS_DIR, EXTRACTED_IMAGES_DIR
 from ocr.quality import analyse_image
-from ocr.preprocessor import preprocess_adaptive
+from ocr.preprocessor import preprocess_image
 from ocr.engines import get_ocr_engine
 from ai.extractor import get_ai_extractor
-from ai.verifier import MistralVerifier
+from ai.verifier import LocalOllamaVerifier
 from update_employee import merge_extraction_results, map_extracted_to_employee_fields, save_employee_draft
 
 
@@ -25,7 +27,7 @@ DOCX_EXTENSIONS = {".docx"}
 def save_uploaded_file(upload_file) -> str:
     suffix = Path(upload_file.filename).suffix.lower()
     safe_name = f"{uuid.uuid4().hex}{suffix}"
-    target = UPLOADS_DIR / safe_name
+    target = ORIGINALS_DIR / safe_name
 
     with target.open("wb") as buffer:
         shutil.copyfileobj(upload_file.file, buffer)

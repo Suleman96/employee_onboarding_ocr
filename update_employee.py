@@ -1,12 +1,17 @@
-from typing import Any
 from sqlalchemy.orm import Session
 
 from database import Employee, AuditLog
 
 
-def pick_better_value(old_value, new_value, old_conf="not_found", new_conf="not_found"):
-    rank = {"high": 4, "medium": 3, "low": 2, "not_found": 1}
+CONF_RANK = {
+    "high": 4,
+    "medium": 3,
+    "low": 2,
+    "not_found": 1,
+}
 
+
+def pick_better_value(old_value, new_value, old_conf="not_found", new_conf="not_found"):
     if new_value in (None, "", []):
         return old_value, old_conf
 
@@ -14,9 +19,9 @@ def pick_better_value(old_value, new_value, old_conf="not_found", new_conf="not_
         return new_value, new_conf
 
     if str(old_value).strip() == str(new_value).strip():
-        return old_value, max(old_conf, new_conf, key=lambda x: rank.get(x, 0))
+        return old_value, max(old_conf, new_conf, key=lambda x: CONF_RANK.get(x, 0))
 
-    if rank.get(new_conf, 0) > rank.get(old_conf, 0):
+    if CONF_RANK.get(new_conf, 0) > CONF_RANK.get(old_conf, 0):
         return new_value, new_conf
 
     return old_value, old_conf
@@ -24,7 +29,8 @@ def pick_better_value(old_value, new_value, old_conf="not_found", new_conf="not_
 
 def merge_extraction_results(results: list[dict]) -> dict:
     merged = {}
-    merged_confidence = {}
+    merged_conf = {}
+    conflicts = []
 
     for result in results:
         extracted = result.get("extracted_data", {})
@@ -35,14 +41,25 @@ def merge_extraction_results(results: list[dict]) -> dict:
                 continue
 
             old_value = merged.get(key)
-            old_conf = merged_confidence.get(key, "not_found")
+            old_conf = merged_conf.get(key, "not_found")
             new_conf = confidence.get(key, "not_found")
+
+            if old_value not in (None, "", []) and value not in (None, "", []) and str(old_value).strip() != str(value).strip():
+                if CONF_RANK.get(new_conf, 0) == CONF_RANK.get(old_conf, 0):
+                    conflicts.append({
+                        "field": key,
+                        "old_value": old_value,
+                        "new_value": value,
+                        "old_confidence": old_conf,
+                        "new_confidence": new_conf,
+                    })
 
             chosen_value, chosen_conf = pick_better_value(old_value, value, old_conf, new_conf)
             merged[key] = chosen_value
-            merged_confidence[key] = chosen_conf
+            merged_conf[key] = chosen_conf
 
-    merged["confidence"] = merged_confidence
+    merged["confidence"] = merged_conf
+    merged["conflicts"] = conflicts
     return merged
 
 
@@ -73,16 +90,11 @@ def map_extracted_to_employee_fields(data: dict) -> dict:
     }
 
 
-def save_employee_draft(
-    db: Session,
-    mapped_data: dict,
-    performed_by: str = "ocr_pipeline",
-    employee_id: int | None = None,
-) -> Employee:
+def save_employee_draft(db: Session, mapped_data: dict, employee_id: int | None = None, performed_by: str = "ocr_pipeline"):
     if employee_id:
         employee = db.query(Employee).filter(Employee.id == employee_id).first()
         if not employee:
-            raise ValueError(f"Employee with id={employee_id} not found")
+            raise ValueError(f"Employee {employee_id} not found")
     else:
         employee = Employee(status="draft")
         db.add(employee)
@@ -99,7 +111,7 @@ def save_employee_draft(
     audit = AuditLog(
         action="ocr_draft_save",
         employee_id=employee.id,
-        details="Employee draft created/updated from uploaded documents",
+        details="Saved OCR/local-AI extraction draft",
         performed_by=performed_by,
     )
     db.add(audit)
