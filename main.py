@@ -202,6 +202,11 @@ def upload_page(request: Request):
         context={"form_data": {}}
     )
 
+
+@app.post("/uploads/documents")
+
+
+
 @app.post("/employees/new")
 
 def create_employee(
@@ -439,6 +444,7 @@ def create_employee(
         
 @app.get("/review/{employee_id}", response_class=HTMLResponse)
 def review_employee(employee_id:int, request: Request, db:Session = Depends(get_db)):
+    
     
     employee = db.query(Employee).filter(Employee.id == employee_id).first()
     if not employee:

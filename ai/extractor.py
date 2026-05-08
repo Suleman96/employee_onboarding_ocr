@@ -1,96 +1,101 @@
 # ai/extractor.py
 
 import json
-import mistralai import MistralAI  # type: ignore[reportMissingImports]
+import requests
 
-from config import MISTRAL_API_KEY
+from config import OLLAMA_BASE_URL, LOCAL_TEXT_MODEL
 
-EXTRACTION_SCHEMA = {
-    
-    "type": "object",
-    "properties": {
-        "first_name": {"type": ["string", "null"]},
-        "last_name": {"type": ["string", "null"]},
-        "date_of_birth": {"type": ["string", "null"]},
-        "place_of_birth": {"type": ["string", "null"]},
-        "country_of_birth": {"type": ["string", "null"]},
-        "nationality": {"type": ["string", "null"]},
-        "id_number": {"type": ["string", "null"]},
-        "passport_number": {"type": ["string", "null"]},
-        "street_and_number": {"type": ["string", "null"]},
-        "zip_code": {"type": ["string", "null"]},
-        "city": {"type": ["string", "null"]},
-        "country": {"type": ["string", "null"]},
-        "iban": {"type": ["string", "null"]},
-        "bic": {"type": ["string", "null"]},
-        "bank_name": {"type": ["string", "null"]},
-        "account_owner": {"type": ["string", "null"]},
-        "steuer_id": {"type": ["string", "null"]},
-        "sozialversicherung": {"type": ["string", "null"]},
-        "health_insurance_name": {"type": ["string", "null"]},
-        "health_insurance_number": {"type": ["string", "null"]},
-        "phone": {"type": ["string", "null"]},
-        "email": {"type": ["string", "null"]},
-        "confidence": {
-            "type": "object",
-            "additionalProperties": {
-                "type": "string",
-                "enum": ["high", "medium", "low", "not_found"]
-            }
-        },
-        "extraction_notes": {"type": ["string", "null"]}
-    },
-    "required": ["first_name", "last_name", "date_of_birth", "confidence"]
+
+EXTRACTION_SCHEMA_DESCRIPTION = """
+Return a JSON object with these fields only:
+{
+  "first_name": string or null,
+  "last_name": string or null,
+  "date_of_birth": string or null,
+  "place_of_birth": string or null,
+  "country_of_birth": string or null,
+  "nationality": string or null,
+  "id_number": string or null,
+  "passport_number": string or null,
+  "street_and_number": string or null,
+  "zip_code": string or null,
+  "city": string or null,
+  "country": string or null,
+  "iban": string or null,
+  "bic": string or null,
+  "bank_name": string or null,
+  "account_owner": string or null,
+  "steuer_id": string or null,
+  "sozialversicherung": string or null,
+  "health_insurance_name": string or null,
+  "health_insurance_number": string or null,
+  "phone": string or null,
+  "email": string or null,
+  "confidence": {
+    "first_name": "high|medium|low|not_found",
+    "last_name": "high|medium|low|not_found"
+  },
+  "extraction_notes": string or null
 }
+Rules:
+- never invent values
+- if missing, use null
+- date_of_birth must be DD.MM.YYYY if possible
+- place_of_birth is NOT always the current city
+- city is current residential city
+- IBAN should be uppercase without spaces
+"""
 
-class MistralExtractor:
-    def __init__(self):
-        if not MISTRAL_API_KEY:
-            raise ValueError("Mistral API is missing")
+
+class LocalOllamaExtractor:
+    def __init__self(self, model_name:str = LOCAL_TEXT_MODEL):
+        self.model_name = model_name
         
-        self.client = Mistral(api_key=MISTRAL_API_KEY)
-    def extract_from_text(self, raw_text: str, source_description: str = "") -> dict:
-        
+    def extract_from_text(self, raw_text: str, source_description:str = "") -> dict:
         prompt = f"""
         
-        Du bist ein Datenextraktions-Assistent für internationale Personaldokumente.
-
-        Extrahiere Mitarbeiterdaten aus dem folgenden Text.
-
-        WICHTIGE REGELN:
-        - Erfinde nichts
-        - Wenn ein Feld nicht vorhanden ist: null
-        - date_of_birth immer in DD.MM.YYYY
-        - IBAN ohne Leerzeichen, in Großbuchstaben
-        - place_of_birth ist NICHT die aktuelle Stadt
-        - city ist aktuelle Wohnstadt, nicht Geburtsort
-        - confidence pro Feld: high / medium / low / not_found
-
-        Quelle:
+        You are a multilingual employee document extraction system 
+        
+        Source:
         {source_description}
-
+        
+        Task:
+        Extract employee informaiton from the text below. Follow the schema and rules exactly. If information is missing, do not guess, just use null.
+        
+        Important:
+        - The document amy be in german, polish, english, russian, turkish, hungarian or other languages. Always try to extract as much as possible, even from non-german text.
+        - Follow the schema and rules exactly. Do no add any fields that are not in the schema. Do not return any explanations.
+        - If the field is not clearly present, return null. Do no guess or infer values.
+        - Never invent values
+        - Keep place_of_birth separate from current address
+        - Return valid JSON only
+        
+        Schema:
+        {EXTRACTION_SCHEMA_DESCRIPTION}
+        
         Text:
-        {raw_text[:5000]}
+        {raw_text[:8000]}
+       
         """
         
-        response = self.client.chat.complete(
-            model = "mistral-small-latest",
-            messages = [{"role": "user", "content": prompt}],
-            response_format= {
-                "type": "json_schema",
-                "json_schema": {
-                    "name" : "EmployeeExtraction",
-                    "schema" : EXTRACTION_SCHEMA,
-                    "strict" : True
-                }
-            }
+        response = requests.post(
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json = {
+                "model": self.model_name,
+                "prompt": prompt,
+                "stream": False,
+                "format": "json",
+            },
+            timeout=180,
         )
-        return json.loads(response.choices[0].message.content)
+        response.raise_for_status()
+        
+        result =response.json()
+        text = result.get("response",  "").strip()
+        
+        return json.loads(text)
 
-def get_ai_extractor(name: str = "mistral"):
-    name = (name or "").lower()
-    
-    if name == "mistral":
-        return MistralExtractor()
-    
-    raise ValueError(f"Unsupported AI extractor : {name}")
+def get_ai_extractor(name: str = "local"):
+    if name in ("local", "ollama"):
+        return LocalOllamaExtractor()
+    raise ValueError(f"Unsupported AI extractor: {name}")
