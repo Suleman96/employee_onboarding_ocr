@@ -10,17 +10,19 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request, Depends, Form, HTTPException
+from fastapi import FastAPI, Request, Depends, Form, HTTPException, UploadFile, File
 from urllib.parse import quote
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
 from database import create_tables, get_db, Employee, AuditLog
 from contracts.generator import convert_docx_to_pdf, generate_contract_for_employee
 from contracts.resolver import normalize_contract_attributes, resolve_template_path
-from pathlib import Path
+from pipeline import process_uploaded_files
 
+from pathlib import Path
 from typing import List
 from schemas import EmployeeCreate, EmployeeUpdate, EmployeeResponse, AuditLogResponse
 import json
@@ -202,11 +204,40 @@ def upload_page(request: Request):
         context={"form_data": {}}
     )
 
+@app.post("/upload/documents")
+def upload_documents(
+    request: Request,
+    files: list[UploadFile] = File(default=[]),
+    text_input: str = Form(default=""),
+    employee_id: int | None = Form(default=None),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = process_uploaded_files(
+            db=db,
+            files=files,
+            text_input=text_input,
+            employee_id=employee_id,
+        )
 
-@app.post("/uploads/documents")
+        employee_id = result["employee_id"]
+        return RedirectResponse(url=f"/review/{employee_id}", status_code=303)
 
+    except Exception as e:
+        import traceback
+        print("=== UPLOAD PIPELINE ERROR START ===")
+        traceback.print_exc()
+        print("=== UPLOAD PIPELINE ERROR END ===")
 
-
+        return templates.TemplateResponse(
+            request=request,
+            name="upload.html",
+            context={
+                "form_data": {},
+                "error": f"Upload processing failed: {str(e)}",
+            },
+            status_code=400,
+        )
 @app.post("/employees/new")
 
 def create_employee(

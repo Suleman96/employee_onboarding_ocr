@@ -415,7 +415,51 @@
                 {{ error_message }}
             </div>
             {% endif %}
+
             {% set fd = form_data or {} %}
+
+            <form action="/upload/documents" method="post" enctype="multipart/form-data">
+                <div class="form-section">
+                    <h3>Document Upload</h3>
+
+                    <div class="fields-row">
+                        <div class="field full-width">
+                            <label for="files">Upload Documents</label>
+                            <input
+                                type="file"
+                                id="files"
+                                name="files"
+                                multiple
+                                accept=".jpg,.jpeg,.png,.webp,.heic,.pdf,.docx"
+                            >
+                        </div>
+
+                        <div class="field full-width">
+                            <label for="text_input">Optional Pasted Text</label>
+                            <textarea
+                                id="text_input"
+                                name="text_input"
+                                rows="8"
+                                style="width: 100%; padding: 0.55rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: inherit;"
+                                placeholder="Paste text here if no file is available..."
+                            ></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label for="employee_id">Existing Employee ID (optional)</label>
+                            <input
+                                type="number"
+                                id="employee_id"
+                                name="employee_id"
+                                placeholder="Leave empty for new employee"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit">Process Uploaded Documents</button>
+                </div>
+            </form>
+
             <form action="/employees/new" method="post">
                 <!-- Personal Information -->
                 <div class="form-section">

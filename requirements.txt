@@ -1,30 +1,44 @@
-# OCR
-paddlepaddle
-paddleocr #This is used for OCR,
+# ── Web framework ────────────────────────────────────────────────
+fastapi
+uvicorn[standard]
+python-multipart
+jinja2
+pydantic[email]
+httpx
 
-#Tesseract OCR
-# https://github.com/UB-Mannheim/tesseract/wiki#tesseract-installer-for-windows # Tesseract OCR Mannheim
-# ADD to Path C:\Program Files\Tesseract-OCR\tesseract.exe
-pytesseract # This is used for OCR, it is a wrapper for Tesseract OCR
+# ── Database ─────────────────────────────────────────────────────
+sqlalchemy
 
-# Mistral.AI
-# https://console.mistral.ai/upgrade/plans
+# ── Document processing ──────────────────────────────────────────
+python-docx          # read/write .docx files
+PyPDF2               # extract text from PDFs
+pdf2image            # convert PDF pages to images
+PyMuPDF              # fitz — fast PDF rendering
+docxtpl              # render .docx templates with Jinja2
+docx2pdf             # convert .docx to PDF
 
+# ── Image processing ─────────────────────────────────────────────
+pillow
 opencv-python
 
-fastapi 
-uvicorn[standard] 
-python-multipart 
-jinja2 
-pydantic[email]
-httpx 
-pillow 
+# ── OCR engines ──────────────────────────────────────────────────
+# Tesseract: install separately https://github.com/UB-Mannheim/tesseract/wiki
+# Add to PATH: C:\Program Files\Tesseract-OCR\tesseract.exe
+pytesseract
+
+easyocr
+
+# PaddleOCR (optional — heavy install, comment out if not needed)
+# paddlepaddle
+# paddleocr
+
+# ── AI / LLM ─────────────────────────────────────────────────────
+# Ollama runs locally — no pip install needed (https://ollama.com)
+# Paid fallback (disabled by default via PAID_FALLBACK_ENABLED=false)
 mistralai
+
+# ── Utilities ────────────────────────────────────────────────────
 python-dotenv
 loguru
 tenacity
 apscheduler
-sqlalchemy
-python-multipart # This is used for handling file uploads in FastAPI
-docxtpl
-docx2pdf

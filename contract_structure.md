@@ -1,6 +1,6 @@
 # Contract Structure
 
-Describes how contract templates are organised on disk and how `contracts/resolver.py` maps employee attributes to a template file.
+Describes how contract templates are organized on disk and how `contracts/resolver.py` maps employee attributes to a template file.
 
 ---
 
@@ -8,34 +8,47 @@ Describes how contract templates are organised on disk and how `contracts/resolv
 
 ```
 contracts/
+├── resolver.py                        ← picks the right template from employee attributes
+├── generator.py                       ← renders template → DOCX + PDF, saved to output/
+├── hours.py                           ← weekly/daily hours schedule helpers
+│
 ├── berlin/
 │   ├── befristet/
-│   │   └── 2026/                          ← active befristet templates
-│   │       ASN_AV_berlin_<role>_befristet_<hours>.docx
+│   │   └── 2026/
+│   │       ├── ASN_AV_berlin_floor_supervisor_befristet_40.docx
+│   │       ├── ASN_AV_berlin_glasreiniger_befristet_40.docx
+│   │       ├── ASN_AV_berlin_hausmann_befristet_40.docx
+│   │       ├── ASN_AV_berlin_hsk_befristet_40.docx
+│   │       ├── ASN_AV_berlin_minibar_befristet_40.docx
+│   │       ├── ASN_AV_berlin_minijob_befristet.docx    ← no hours suffix
+│   │       ├── ASN_AV_berlin_nr_befristet_40.docx
+│   │       ├── ASN_AV_berlin_public_area_befristet_40.docx
+│   │       ├── ASN_AV_berlin_reinigungskraft_befristet_40.docx
+│   │       └── ASN_AV_berlin_stw_befristet_40.docx
 │   └── unbefristet/
-│       ├── VORLAGEN Unbefristet_Adlon/    ← Adlon subgroup
-│       │   ASN_AV_berlin_<role>_unbefristet_adlon_<hours>.docx
-│       └── VORLAGEN Unbefristet_GHB/     ← GHB subgroup
-│           ASN_AV_berlin_<role>_unbefristet_ghb_<hours>.docx
+│       ├── VORLAGEN Unbefristet_Adlon/
+│       │   └── ASN_AV_berlin_<role>_unbefristet_adlon_40.docx
+│       └── VORLAGEN Unbefristet_GHB/
+│           └── ASN_AV_berlin_<role>_unbefristet_ghb_40.docx
 │
 ├── koeln_group/
-│   ├── bergisch_gladbach/                 ← flat folder, befristet only
-│   │   ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
-│   ├── duesseldorf/                       ← flat folder
-│   │   DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│   ├── bergisch_gladbach/             ← befristet only, flat folder
+│   │   └── ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
+│   ├── duesseldorf/                   ← unbefristet only, flat folder
+│   │   └── DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
 │   ├── frankfurt/
-│   │   ├── befristet/
-│   │   │   FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx
-│   │   └── unbefristet/
-│   │       MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│   │   ├── Vorlagen Befristet/
+│   │   │   └── FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx
+│   │   └── Vorlagen Unbefristet AV/
+│   │       └── MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
 │   └── hamburg/
 │       ├── Vorlagen Befristet/
-│       │   HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx
+│       │   └── HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx
 │       └── Vorlagen Unbefristet AV/
-│           MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│           └── MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
 │
-└── wien/                                  ← flat folder
-    ASN_AV_wien_<Role>_<hours>_Std[_<days>_Tage_<daily>_Std].docx
+└── wien/                              ← flat folder, all effectively unbefristet
+    └── ASN_AV_wien_<Role>_<hours>_Std[_<days>_Tage_<daily>_Std].docx
 ```
 
 ---
@@ -57,16 +70,16 @@ contracts/
 ## City Routing
 
 ```
-work_city  ──normalize──►  city_code  ──►  resolver function
-────────────────────────────────────────────────────────────
-berlin                      berlin          resolve_berlin_template()
-köln / koeln                koeln_group     resolve_koeln_group_template()
-bergisch gladbach           bergisch_gladbach  ↑ (same)
-düsseldorf / duesseldorf    duesseldorf        ↑
-frankfurt                   frankfurt          ↑
-hamburg                     hamburg            ↑
-münchen / muenchen          muenchen           ↑
-wien / vienna               wien            resolve_wien_template()
+work_city              → city_code          → resolver function
+─────────────────────────────────────────────────────────────────
+berlin                   berlin               resolve_berlin_template()
+köln / koeln             koeln_group          resolve_koeln_group_template()
+bergisch gladbach        bergisch_gladbach      ↑ (same)
+düsseldorf / duesseldorf duesseldorf            ↑
+frankfurt                frankfurt              ↑
+hamburg                  hamburg                ↑
+münchen / muenchen       muenchen               ↑
+wien / vienna            wien                 resolve_wien_template()
 ```
 
 ---
@@ -75,7 +88,9 @@ wien / vienna               wien            resolve_wien_template()
 
 **Befristet** — folder: `contracts/berlin/befristet/2026/`
 
-| Role (occupation_code) | File |
+Naming: `ASN_AV_berlin_<role>_befristet_40.docx`
+
+| occupation_code | File |
 |---|---|
 | `floor_supervisor` | `ASN_AV_berlin_floor_supervisor_befristet_40.docx` |
 | `glasreiniger` | `ASN_AV_berlin_glasreiniger_befristet_40.docx` |
@@ -90,13 +105,13 @@ wien / vienna               wien            resolve_wien_template()
 
 **Unbefristet — Adlon** — folder: `contracts/berlin/unbefristet/VORLAGEN Unbefristet_Adlon/`
 
-`floor_supervisor`, `glasreiniger`, `hausmann`, `hsk`, `minibar`, `nr`, `public_area`, `stw` — all at 40 h.
+Roles: `floor_supervisor`, `glasreiniger`, `hausmann`, `hsk`, `minibar`, `nr`, `public_area`, `stw` — all at 40h.
 
 **Unbefristet — GHB** — folder: `contracts/berlin/unbefristet/VORLAGEN Unbefristet_GHB/`
 
-`floor_supervisor`, `glasreiniger`, `hausmann`, `hsk`, `minibar`, `nr`, `public_area` — all at 40 h.
+Roles: `floor_supervisor`, `glasreiniger`, `hausmann`, `hsk`, `minibar`, `nr`, `public_area` — all at 40h.
 
-> Berlin unbefristet requires `subgroup_code` = `adlon` or `ghb` (set from `hotel_name`).
+> Berlin unbefristet requires `subgroup_code` = `adlon` or `ghb` (derived from `hotel_name`).
 
 ---
 
@@ -104,43 +119,38 @@ wien / vienna               wien            resolve_wien_template()
 
 Cities: `bergisch_gladbach`, `duesseldorf`, `frankfurt`, `hamburg`, `muenchen`
 
-### Bergisch Gladbach — flat folder `contracts/koeln_group/bergisch_gladbach/`
+### Bergisch Gladbach — `contracts/koeln_group/bergisch_gladbach/`
 
 Naming: `ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
 
-| Role | Hours / Days / Daily |
+| Role | Available schedules (hours/days/daily) |
 |---|---|
-| `hsk` | 25/5/5, 30/5/6, 35/5/7, 40/5/8 |
+| `hsk` | 25/5/5 · 30/5/6 · 35/5/7 · 40/5/8 |
 | `hsk_supervisor` | 40/5/8 |
 | `hausmann` | 40/5/8 |
 | `nr` | 40/5/8 |
 
-### Düsseldorf — flat folder `contracts/koeln_group/duesseldorf/`
+### Düsseldorf — `contracts/koeln_group/duesseldorf/`
 
-`DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`  
-Roles: `nr` (`NR`), `stw` (`STW`)
+`DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
 
-### Frankfurt
+Roles: `nr` (token `NR`), `stw` (token `STW`)
 
-- Befristet: `contracts/koeln_group/frankfurt/befristet/`  
-  `FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx`  
-  Roles: `nr` (`NR`), `public_area` / back-of-house (`PA-BOH`)
+### Frankfurt — `contracts/koeln_group/frankfurt/`
 
-- Unbefristet: `contracts/koeln_group/frankfurt/unbefristet/`  
-  `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`  
-  Roles: `hausmann` (`HM-WM`), `hsk` (`HSK`), `nr` (`NR`), `public_area` (`PA-BOH`), `stw` (`STW`), `hsk_supervisor` (`SV`), back-of-house manager
+- Befristet (`Vorlagen Befristet/`): `FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx`
+  - Roles: `nr` (`NR`), `public_area` (`PA-BOH`)
+- Unbefristet (`Vorlagen Unbefristet AV/`): `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
+  - Roles: `hausmann` (`HM-WM`), `hsk` (`HSK`), `nr` (`NR`), `public_area` (`PA-BOH`), `stw` (`STW`), `hsk_supervisor` (`SV`)
 
-### Hamburg
+### Hamburg — `contracts/koeln_group/hamburg/`
 
-- Befristet: `contracts/koeln_group/hamburg/Vorlagen Befristet/`  
-  `HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx`  
-  Roles: `nr` (`NR`), `public_area` / back-of-house (`PA-BOH`)
+- Befristet (`Vorlagen Befristet/`): `HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx`
+  - Roles: `nr` (`NR`), `public_area` (`PA-BOH`)
+- Unbefristet (`Vorlagen Unbefristet AV/`): `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
+  - Same roles as Frankfurt unbefristet.
 
-- Unbefristet: `contracts/koeln_group/hamburg/Vorlagen Unbefristet AV/`  
-  `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`  
-  Same roles as Frankfurt unbefristet.
-
-> The resolver matches koeln_group templates using city token + role token + `BEFRISTET` + hours in the filename. The role token mapping is: `hausmann→HM-WM`, `hsk→HSK`, `hsk_supervisor→HSK SUPERVISOR`, `nr→NR`.
+> Role token map for koeln_group: `hausmann → HM-WM`, `hsk → HSK`, `hsk_supervisor → HSK SUPERVISOR`, `nr → NR`, `public_area → PA-BOH`, `stw → STW`.
 
 ---
 
@@ -152,39 +162,39 @@ Naming: `ASN_AV_wien_<Role>_<hours>_Std[_<days>_Tage_<daily>_Std].docx`
 
 All templates are effectively unbefristet (no contract_type suffix in filenames).
 
-| Role (occupation_code) | File(s) |
+| occupation_code | Available files |
 |---|---|
-| `reinigungskraft` / `reinigungskraft_td` | `Reinigungskraft_TD_20_Std_5_Tage_4_Std`, `_25_Std_5_Tage_5_Std`, `_30_Std_5_Tage_6_Std` |
-| `reinigungskraft_pa` | `Reinigungskraft_PA_32_Std_4_Tage_8_Std` |
-| `reinigungskraft_hm` | `Reinigungskraft_HM_40_Std` |
-| `reinigungskraft_nr` | `Reinigungskraft_NR_40_Std` |
-| `reinigungskraft_public` | `Reinigungskraft_Public_40_Std` |
-| `reinigungskraft_stw` | `Reinigungskraft_STW_40_Std` |
-| `zimmermaedchen` | `Zimmermädchen_24_Std_3_Tage_8_Std`, `_30_Std_5_Tage_6_Std`, `_32_Std_4_Tage_8_Std`, `_40_Std` |
-| `hsk_supervisor` | `HSK_Supervisor_32_Std_4_Tage_8_Std`, `_40_Std` |
-| `hsk_manager` | `HSK_Manager_40_Std` |
-| `ass_hsk_manager` | `Ass_HSK_Manager_40_Std` |
-| `stw_supervisor` | `STW_Supervisor_40_Std` |
-| `stw_manager` | `STW_Manager_40_Std` |
-| `objektleitung_nr` | `Objektleitung_NR_40_Std` |
-| `quality_manager` | `Quality_Manager_40_Std` |
+| `reinigungskraft` / `reinigungskraft_td` | `_TD_20_Std_5_Tage_4_Std`, `_TD_25_Std_5_Tage_5_Std`, `_TD_30_Std_5_Tage_6_Std` |
+| `reinigungskraft_pa` | `_PA_32_Std_4_Tage_8_Std` |
+| `reinigungskraft_hm` | `_HM_40_Std` |
+| `reinigungskraft_nr` | `_NR_40_Std` |
+| `reinigungskraft_public` | `_Public_40_Std` |
+| `reinigungskraft_stw` | `_STW_40_Std` |
+| `zimmermaedchen` | `_24_Std_3_Tage_8_Std`, `_30_Std_5_Tage_6_Std`, `_32_Std_4_Tage_8_Std`, `_40_Std` |
+| `hsk_supervisor` | `_HSK_Supervisor_32_Std_4_Tage_8_Std`, `_HSK_Supervisor_40_Std` |
+| `hsk_manager` | `_HSK_Manager_40_Std` |
+| `ass_hsk_manager` | `_Ass_HSK_Manager_40_Std` |
+| `stw_supervisor` | `_STW_Supervisor_40_Std` |
+| `stw_manager` | `_STW_Manager_40_Std` |
+| `objektleitung_nr` | `_Objektleitung_NR_40_Std` |
+| `quality_manager` | `_Quality_Manager_40_Std` |
 
-### Wien Schedule Validation (`CITY_ROLE_SCHEDULE_RULES`)
+### Wien Schedule Validation
 
-The resolver enforces allowed `(weekly_hours, days_per_week, daily_hours)` combinations before picking a file:
+The resolver enforces allowed `(weekly_hours, days_per_week, daily_hours)` combinations:
 
-| Role | Allowed combinations (h/days/h-per-day) |
+| Role | Allowed combinations |
 |---|---|
 | `reinigungskraft` / `reinigungskraft_td` | 20/5/4 · 25/5/5 · 30/5/6 |
 | `reinigungskraft_pa` | 32/4/8 |
 | `reinigungskraft_hm/nr/public/stw` | 40/5/8 |
 | `zimmermaedchen` | 24/3/8 · 30/5/6 · 32/4/8 · 40/5/8 |
 | `hsk_supervisor` | 32/4/8 · 40/5/8 |
-| `hsk_manager`, `ass_hsk_manager`, `stw_supervisor`, `stw_manager`, `objektleitung_nr`, `quality_manager` | 40/5/8 |
+| All managers / supervisors / objektleitung / quality | 40/5/8 |
 
 ---
 
-## Occupation Alias Map (input → code)
+## Occupation Alias Map
 
 | User input | occupation_code |
 |---|---|
@@ -209,11 +219,35 @@ The resolver enforces allowed `(weekly_hours, days_per_week, daily_hours)` combi
 
 ---
 
+## Available Template Context Variables
+
+These Jinja variables are available in all `.docx` templates (populated from the employee record):
+
+| Category | Variables |
+|---|---|
+| Personal | `salutation`, `first_name`, `last_name`, `full_name`, `gender`, `date_of_birth`, `place_of_birth`, `country_of_birth`, `nationality` |
+| Identity | `ausweis_number`, `reise_pass_number` |
+| Contact | `phone`, `email` |
+| Address | `street_and_house_number`, `zip_code`, `city`, `country`, `full_address` |
+| Tax & insurance | `krankenkasse`, `krankenkasse_nummer`, `steuer_id`, `steuerklasse`, `sozialversicherungsnummer` |
+| Banking | `bank_name`, `bank_iban`, `bank_bic`, `bank_account_holder` |
+| Employment | `work_city`, `occupation`, `employment_type`, `weekly_hours`, `work_days_per_week`, `daily_hours`, `work_schedule`, `contract_type`, `start_date`, `end_date` |
+| Other | `disabled`, `status`, `ordio_id` |
+
+---
+
+## Generated Output
+
+- Output folder: `output/` (repo root)
+- Filename pattern: `AV_<occupation>_<employee_id>_<first_name>_<last_name>_<start_date>.docx`
+- The generator deletes any existing contract for the same employee before saving a new one
+- PDF is generated alongside the DOCX automatically
+
+---
+
 ## Adding a New Template
 
 1. Drop the `.docx` file in the correct city/type folder following the naming convention for that city.
 2. If the role is new, add an entry to `OCCUPATION_ALIASES` in `resolver.py`.
-3. For Wien roles with multiple hour variants, add an entry to `CITY_ROLE_SCHEDULE_RULES["wien"]`.
-4. For Wien roles, add the role token to `_WIEN_ROLE_TOKEN`.
-5. For Berlin roles, add the role token to `_BERLIN_ROLE_TOKEN`.
-6. For Koeln group roles, add the role token to `_KOELN_GROUP_ROLE_TOKEN`.
+3. For Wien roles with multiple hour variants, add the schedule to `CITY_ROLE_SCHEDULE_RULES["wien"]`.
+4. Add the role token to the relevant `_WIEN_ROLE_TOKEN`, `_BERLIN_ROLE_TOKEN`, or `_KOELN_GROUP_ROLE_TOKEN` map in `resolver.py`.
