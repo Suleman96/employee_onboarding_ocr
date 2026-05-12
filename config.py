@@ -12,7 +12,7 @@ DEBUG_DIR = UPLOADS_DIR / "debug"
 
 # Create folders automatically if they do not exist
 for folder in [UPLOADS_DIR, ORIGINALS_DIR, PREPROCESSED_DIR, EXTRACTED_IMAGES_DIR, DEBUG_DIR]:
-    folder.mkdir(parents=True, exist_ok= True)
+    folder.mkdir(parents=True, exist_ok=True)
 
 # ─────────────────────────────────────────────────────────────
 # Local OCR settings
@@ -22,7 +22,7 @@ TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\te
 
 # Tesseract language packs to try
 # German, English, Polish, Russian, Turkish, Hungarian
-TESSERACT_LANGS = os.getenv("TESSERACT_LANGS", "deu+eng+pol+rus+tur+hun")
+TESSERACT_LANGS = os.getenv("TESSERACT_LANGS", "deu+eng")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ SAVE_PREPROCESSED_IMAGES = os.getenv("SAVE_PREPROCESSED_IMAGES", "true").lower()
 # If quality is extremely poor, route to local vision model
 BLUR_THRESHOLD = float(os.getenv("BLUR_THRESHOLD", "15"))
 VERY_BLURRY_THRESHOLD = float(os.getenv("VERY_BLURRY_THRESHOLD", "10"))
-DARK_THRESHOLD = float(os.getenv("DARK_THRESHOLD", "90"))
+DARK_THRESHOLD = float(os.getenv("DARK_THRESHOLD", "120"))
 MIN_DOC_SIZE = int(os.getenv("MIN_DOC_SIZE", "1200"))
 
 

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python -c \":*)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\jobs\\\\Desktop\\\\Suleman\\\\code\\\\employee_onboarding_ocr\" | Where-Object { $_.Name -notmatch \"^\\\\.venv\" } | Select-Object -ExpandProperty Name)",
-      "WebFetch(domain:lichtenberg47.de)"
+      "WebFetch(domain:lichtenberg47.de)",
+      "Bash(.venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

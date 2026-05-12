@@ -43,7 +43,7 @@ class LocalOllamaVerifier:
         Yor are a multilingual employee data verification system. 
         
         Task:
-        Check the extracted employee data against the original text.model_name
+        Check the extracted employee data against the original text.
         Return JSON only.
         
         Schema:
@@ -67,8 +67,7 @@ class LocalOllamaVerifier:
             },
             timeout=180,
         )
-        response.raise_dor_status()
-        result = response.json()
+        response.raise_for_status()
         result = response.json()
         text = result.get("response", "").strip()
         

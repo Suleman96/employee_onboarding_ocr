@@ -26,6 +26,7 @@ from pathlib import Path
 from typing import List
 from schemas import EmployeeCreate, EmployeeUpdate, EmployeeResponse, AuditLogResponse
 import json
+import time
 
 # Initialize FastAPI app with lifespan for startup tasks
 @asynccontextmanager # This allows us to run code on startup (like creating tables) and optionally on shutdown
@@ -212,6 +213,7 @@ def upload_documents(
     employee_id: int | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
+    start_time = time.perf_counter()
     try:
         result = process_uploaded_files(
             db=db,
@@ -219,6 +221,10 @@ def upload_documents(
             text_input=text_input,
             employee_id=employee_id,
         )
+        
+        elapsed_seconds = time.perf_counter() - start_time
+        elapsed_minutes = elapsed_seconds / 60
+        print(f"Extraction completed in {elapsed_seconds:.2f} seconds ({elapsed_minutes:.2f} minutes)")     
 
         employee_id = result["employee_id"]
         return RedirectResponse(url=f"/review/{employee_id}", status_code=303)

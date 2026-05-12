@@ -7,7 +7,6 @@ import zipfile
 
 from docx import Document
 from PyPDF2 import PdfReader
-from pdf2image import convert_from_path
 import fitz
 
 from config import ORIGINALS_DIR, EXTRACTED_IMAGES_DIR
@@ -28,6 +27,9 @@ def save_uploaded_file(upload_file) -> str:
     suffix = Path(upload_file.filename).suffix.lower()
     safe_name = f"{uuid.uuid4().hex}{suffix}"
     target = ORIGINALS_DIR / safe_name
+    
+    # Make absolutely sure the folder exists before saving
+    target.parent.mkdir(parents=True, exist_ok=True)
 
     with target.open("wb") as buffer:
         shutil.copyfileobj(upload_file.file, buffer)
@@ -47,7 +49,7 @@ def extract_text_from_docx(docx_path: str) -> str:
                 table_texts.append(row_text)
                 print("table_texts: from extract text from docs: ", table_texts)
                 
-    return "/n".join(paragraphs + table_texts).strip()
+    return "\n".join(paragraphs + table_texts).strip()
 
 def extract_images_from_docx(docx_path: str) -> list[str]:
     output_paths = []
@@ -80,24 +82,34 @@ def extract_text_from_pdf_if_possible(pdf_path: str) -> str:
 
 
 def render_pdf_pages_to_images(pdf_path: str) -> list[str]:
-    try:
-        pages = convert_from_path(pdf_path)
-    except Exception as e:
-        raise RuntimeError(
-            "PDF page rendering failed. Poppler is probably missing or not in PATH. "
-            f"Original error: {str(e)}"
-        )
+    """
+    Render each PDF page into a PNG image using PyMuPDF (fitz).
 
-    output_dir = EXTRACTED_IMAGES_DIR / Path(pdf_path).stem
+    This avoids the Poppler dependency and is more stable on Windows.
+    """
+    doc = fitz.open(pdf_path)
+
+    output_dir = EXTRACTED_IMAGES_DIR / f"{Path(pdf_path).stem}_pages"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     image_paths = []
-    for i, page in enumerate(pages, start=1):
-        out_path = output_dir / f"page_{i}.png"
-        page.save(out_path, "PNG")
+
+    for page_index in range(len(doc)):
+        page = doc[page_index]
+
+        # Increase resolution for better OCR quality
+        matrix = fitz.Matrix(2.0, 2.0)
+        pix = page.get_pixmap(matrix=matrix, alpha=False)
+
+        out_path = output_dir / f"page_{page_index + 1}.png"
+        pix.save(str(out_path))
+
         image_paths.append(str(out_path))
 
+    doc.close()
     return image_paths
+
+
 
 def extract_embedded_images_from_pdf(pdf_path: str) -> list[str]:
     """
@@ -132,39 +144,91 @@ def extract_embedded_images_from_pdf(pdf_path: str) -> list[str]:
 
 
 
-# This is where the real OCR pipeline begins.
-
-
-def process_image_file(image_path: str) -> dict:
+def score_ocr_text(text: str) -> int:
+    """
+    Very simple OCR scoring heuristic.
+    Higher score = more useful-looking text.
+    """
     
-    #This runs the quality analysis from ocr/quality.py. dark, blurry
+    if not text:
+        return 0
+    score = 0
+    score += len(text)
+    
+    #Reward digits and letters
+    score += sum(ch.isalpha() for ch in text)
+    score += sum(ch.isdigit() for ch in text)
+
+    # Reward likely structured form content
+    keywords = [
+        "name", "vorname", "familienname", "geburtsdatum", "geburtsort",
+        "nationality", "staatsangehörigkeit", "telefon", "iban", "bic"
+    ]
+    lowered = text.lower()
+    for kw in keywords:
+        if kw in lowered:
+            score+= 25
+    return score
+
+
+# This is where the real OCR pipeline begins.
+def process_image_file(image_path: str) -> dict:
     quality = analyse_image(image_path)
 
-    # For now we keep the routing simple:
-    # preprocess the image, OCR it, then run local extraction + verification
-    
-    #Run the full preprocessing pipeline.
+    if quality.width < 300 or quality.height < 150:
+        raise ValueError(
+            f"Image too small for useful OCR: {image_path} ({quality.width}x{quality.height})"
+        )
+
     prep = preprocess_image(image_path)
-    
-    #Take the final OCR-ready image path.
     final_image = prep["final_path"]
 
-    # Get the OCR engine object.
-    ocr = get_ocr_engine("tesseract")
-    # Run OCR on the preprocessed image.
-    raw_text = ocr.extract_text(final_image)
+    if not Path(final_image).exists():
+        raise FileNotFoundError(f"Preprocessed image was not created: {final_image}")
 
-    # Get the local AI extractor.
+    ocr = get_ocr_engine("tesseract")
+
+    candidate_paths = prep.get("ocr_candidates", {})
+    ocr_trials = []
+
+    for candidate_name, candidate_path in candidate_paths.items():
+        if not candidate_path:
+            continue
+        if not Path(candidate_path).exists():
+            continue
+
+        try:
+            candidate_text = ocr.extract_text(candidate_path)
+            candidate_score = score_ocr_text(candidate_text)
+
+            ocr_trials.append({
+                "candidate_name": candidate_name,
+                "candidate_path": candidate_path,
+                "raw_text": candidate_text,
+                "score": candidate_score,
+            })
+        except Exception:
+            continue
+
+    if not ocr_trials:
+        candidate_names = list(candidate_paths.keys())
+        raise ValueError(
+            f"OCR failed for all preprocessing candidates for image: {image_path}. "
+            f"Tried candidates: {candidate_names}"
+        )
+
+    best_trial = max(ocr_trials, key=lambda x: x["score"])
+    raw_text = best_trial["raw_text"]
+    best_candidate_name = best_trial["candidate_name"]
+    best_candidate_path = best_trial["candidate_path"]
+
     extractor = get_ai_extractor("local")
-    #This sends the OCR text into the local extraction model.
     extracted = extractor.extract_from_text(
         raw_text,
         source_description=f"OCR image: {Path(image_path).name}"
     )
 
-    #Create the second local AI pass.
     verifier = LocalOllamaVerifier()
-    #Compare extracted fields back against the OCR text.
     verification = verifier.verify_extraction(raw_text, extracted)
 
     return {
@@ -180,13 +244,15 @@ def process_image_file(image_path: str) -> dict:
             "needs_preprocessing": quality.needs_preprocessing,
             "route_to_vision": quality.route_to_vision,
         },
+        "best_candidate_name": best_candidate_name,
+        "best_candidate_path": best_candidate_path,
+        "ocr_trials": ocr_trials,
         "raw_text": raw_text,
         "extracted_data": extracted,
         "verification": verification,
         "debug_steps": prep["steps"],
         "pipeline_path": "image_preprocess_ocr_local_extract_local_verify",
     }
-
 def process_docx_file(docx_path: str) -> dict:
     # Read the typed text from the DOCX.
     direct_text = extract_text_from_docx(docx_path)
@@ -282,12 +348,20 @@ def process_pdf_file(pdf_path: str) -> dict:
         embedded_images = []
 
     for page_img in page_images:
-        page_result = process_image_file(page_img)
-        results.append(page_result)
+        try:
+            page_result = process_image_file(page_img)
+            results.append(page_result)
+        except Exception as e:
+            print(f"[WARN] Skipping rendered PDF page image {page_img}: {e}")
+            continue
 
     for emb_img in embedded_images:
-        emb_result = process_image_file(emb_img)
-        results.append(emb_result)
+        try:
+            emb_result = process_image_file(emb_img)
+            results.append(emb_result)
+        except Exception as e:
+            print(f"[WARN] Skipping embedded PDF image {emb_img}: {e}")
+            continue            
 
     if not results:
         raise ValueError(

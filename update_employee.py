@@ -66,7 +66,10 @@ def merge_extraction_results(results: list[dict]) -> dict:
 def map_extracted_to_employee_fields(data: dict) -> dict:
     return {
         "first_name": data.get("first_name"),
+        "middle_name": data.get("middle_name"),
         "last_name": data.get("last_name"),
+        "gender": data.get("gender"),
+        "marital_status": data.get("marital_status"),
         "date_of_birth": data.get("date_of_birth"),
         "place_of_birth": data.get("place_of_birth"),
         "country_of_birth": data.get("country_of_birth"),
