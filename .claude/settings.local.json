@@ -4,7 +4,9 @@
       "Bash(python -c \":*)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\jobs\\\\Desktop\\\\Suleman\\\\code\\\\employee_onboarding_ocr\" | Where-Object { $_.Name -notmatch \"^\\\\.venv\" } | Select-Object -ExpandProperty Name)",
       "WebFetch(domain:lichtenberg47.de)",
-      "Bash(.venv/Scripts/python.exe -c ' *)"
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(python -c ' *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Tesseract-OCR\\\\tesseract.exe\" --list-langs 2>&1)"
     ]
   }
 }

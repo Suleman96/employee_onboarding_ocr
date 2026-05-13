@@ -225,6 +225,14 @@ def upload_documents(
         elapsed_seconds = time.perf_counter() - start_time
         elapsed_minutes = elapsed_seconds / 60
         print(f"Extraction completed in {elapsed_seconds:.2f} seconds ({elapsed_minutes:.2f} minutes)")     
+                
+        # Log to file
+        log_file = "logs/upload_logs.csv"
+        if not Path(log_file).exists():
+            with open(log_file, "w") as f:
+                f.write("Date,Files,Time\n")
+        with open(log_file, "a") as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')},{len(files)},{elapsed_minutes:.2f}\n")
 
         employee_id = result["employee_id"]
         return RedirectResponse(url=f"/review/{employee_id}", status_code=303)

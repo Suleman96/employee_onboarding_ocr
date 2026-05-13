@@ -5,14 +5,8 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent
 UPLOADS_DIR = BASE_DIR / "uploads"
-ORIGINALS_DIR = UPLOADS_DIR / "originals"
-PREPROCESSED_DIR = UPLOADS_DIR / "preprocessed"
-EXTRACTED_IMAGES_DIR = UPLOADS_DIR / "extracted_images"
-DEBUG_DIR = UPLOADS_DIR / "debug"
 
-# Create folders automatically if they do not exist
-for folder in [UPLOADS_DIR, ORIGINALS_DIR, PREPROCESSED_DIR, EXTRACTED_IMAGES_DIR, DEBUG_DIR]:
-    folder.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─────────────────────────────────────────────────────────────
 # Local OCR settings
@@ -22,7 +16,7 @@ TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\te
 
 # Tesseract language packs to try
 # German, English, Polish, Russian, Turkish, Hungarian
-TESSERACT_LANGS = os.getenv("TESSERACT_LANGS", "deu+eng")
+TESSERACT_LANGS = os.getenv("TESSERACT_LANGS", "deu+eng+rus")
 
 
 # ─────────────────────────────────────────────────────────────
