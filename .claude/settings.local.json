@@ -6,7 +6,10 @@
       "WebFetch(domain:lichtenberg47.de)",
       "Bash(.venv/Scripts/python.exe -c ' *)",
       "Bash(python -c ' *)",
-      "PowerShell(& \"C:\\\\Program Files\\\\Tesseract-OCR\\\\tesseract.exe\" --list-langs 2>&1)"
+      "PowerShell(& \"C:\\\\Program Files\\\\Tesseract-OCR\\\\tesseract.exe\" --list-langs 2>&1)",
+      "PowerShell(head *)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"import sys; import mistralai; print\\(mistralai.__file__\\); print\\([p for p in sys.path if 'mistral' in p.lower\\(\\)]\\)\")",
+      "PowerShell(cd \"C:\\\\Users\\\\jobs\\\\Desktop\\\\Suleman\\\\code\\\\employee_onboarding_ocr\"; $env:PYTHONIOENCODING=\"utf-8\"; .\\\\.venv\\\\Scripts\\\\python.exe test_mistral_ocr.py 2>&1)"
     ]
   }
 }

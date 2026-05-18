@@ -75,6 +75,7 @@ def map_extracted_to_employee_fields(data: dict) -> dict:
         "country_of_birth": data.get("country_of_birth"),
         "nationality": data.get("nationality"),
         "ausweis_number": data.get("id_number"),
+        "ausweis_expiry_date": data.get("id_expiry"),
         "reise_pass_number": data.get("passport_number"),
         "reise_pass_expiry_date": data.get("passport_expiry"),
         "working_permit_number": data.get("working_permit_number"),

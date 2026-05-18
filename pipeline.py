@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import shutil
 import uuid
 import zipfile
@@ -10,7 +11,7 @@ from docx import Document
 from PyPDF2 import PdfReader
 import fitz
 
-from config import UPLOADS_DIR
+from config import OCR_ENGINE, UPLOADS_DIR
 from ocr.quality import analyse_image
 from ocr.preprocessor import preprocess_image
 from ocr.engines import get_ocr_engine
@@ -198,44 +199,75 @@ def score_ocr_text(text: str) -> int:
         "name", "vorname", "familienname", "geburtsdatum", "geburtsort",
         "nationality", "staatsangehörigkeit", "telefon", "iban", "bic",
         "ausweis", "reisepass", "aufenthalt", "steuer", "versicherung",
+        "passport", "passport no", "document number", "dokumentennummer",
+        "residence permit", "aufenthaltstitel", "gultig", "gueltig",
+        "gültig", "ablaufdatum", "date of expiry",
     ]
     lowered = text.lower()
     for kw in keywords:
         if kw in lowered:
             score += 25
 
+    # Critical structured identifiers matter more than text volume. Without this,
+    # a verbose but wrong OCR pass can beat a shorter pass that captured the ID.
+    compact = re.sub(r"\s+", "", text.upper())
+    if re.search(r"\b[A-Z]\d{7,9}\b", text.upper()) and any(
+        marker in compact
+        for marker in ("AUFENTHALTSTITEL", "AUFENIHALTSTITEL", "RESIDENCEPERMIT")
+    ):
+        score += 250
+
+    if re.search(r"\b[A-Z]{1,2}\d{6,9}\b", text.upper()) and any(
+        marker in lowered for marker in ("passport", "reisepass", "nacnopt")
+    ):
+        score += 150
+
+    if re.search(r"\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b", compact):
+        score += 100
+
+    if re.search(r"\b[A-Z0-9]{8}(?:[A-Z0-9]{3})?\b", compact) and "bic" in lowered:
+        score += 60
+
     return score
 
 
 # ── Document helpers ─────────────────────────────────────────────────────────
 
+def _strip_mrz_lines(text: str) -> str:
+    """Remove MRZ lines (lines with 5+ consecutive < or > chars) from OCR text."""
+    import re
+    cleaned = [line for line in text.splitlines() if not re.search(r"[<>]{5,}", line)]
+    return "\n".join(cleaned)
+
+
 def _is_mrz_only(text: str) -> bool:
     """
-    Return True when the page is a MRZ-only page (back of ID/residence permit).
-    Uses line-level pattern matching: any line with 5+ consecutive < or > chars
-    is a strong MRZ signal, regardless of how much noise text surrounds it.
+    Return True only when the page is PURELY MRZ with no useful non-MRZ content.
+    Strips MRZ lines first and checks whether anything meaningful remains.
     """
     if not text:
         return False
-    import re
-    for line in text.splitlines():
-        if re.search(r"[<>]{5,}", line):
-            return True
-    return False
+    stripped = _strip_mrz_lines(text)
+    return len(stripped.strip()) < MIN_USEFUL_OCR_CHARS
 
 
 def _detect_doc_type(text: str) -> str:
     t = text.lower()
-    if any(k in t for k in ("reisepass", "passport", "p<ukr", "p<deu", "p<afg", "p<pol")):
-        return "passport"
-    if any(k in t for k in ("aufenthaltstitel", "aufenthaltserlaubnis", "residence permit",
-                             "ausweis für vertriebene", "ausweis fur vertriebene")):
-        return "residence_permit"
+    # Meldezettel FIRST — it contains "reisepass" in the REISEDOKUMENT section,
+    # so checking passport before meldezettel would misclassify it.
     if any(k in t for k in ("melderegister", "meldezettel", "bestätigung der meldung",
                              "bestatigung der meldung", "zentrales melderegister")):
         return "meldezettel"
+    if any(k in t for k in ("aufenthaltstitel", "aufenthaltserlaubnis", "residence permit",
+                             "ausweis für vertriebene", "ausweis fur vertriebene",
+                             "freier arbeitsmarktzugang", "bundesamt fur fremden",
+                             "bundesamt für fremden")):
+        return "residence_permit"
+    if any(k in t for k in ("reisepass", "passport", "p<ukr", "p<deu", "p<afg", "p<pol",
+                             "p<hun", "p<tur", "p<pol", "p<srb")):
+        return "passport"
     if any(k in t for k in ("iban", "bic", "kontonummer", "kreditkarte", "sparkasse",
-                             "bank austria", "erste bank", "raiffeisen")):
+                             "bank austria", "erste bank", "raiffeisen", "austriacard")):
         return "bank_document"
     if any(k in t for k in ("sozialversicherung", "sv-nummer", "e-card")):
         return "sv_card"
@@ -253,7 +285,11 @@ def _save_ocr_text(session: UploadSession, stem: str, original_name: str, text: 
 
 # ── Core image processing ─────────────────────────────────────────────────────
 
-def process_image_file(image_path: str, session: UploadSession) -> dict:
+def process_image_file(
+    image_path: str,
+    session: UploadSession,
+    ocr_engine_name: str | None = None,
+) -> dict:
     quality = analyse_image(image_path)
 
     if quality.width < 300 or quality.height < 150:
@@ -271,22 +307,33 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
     if not Path(final_image).exists():
         raise FileNotFoundError(f"Preprocessed image was not created: {final_image}")
 
-    ocr = get_ocr_engine("tesseract")
+    selected_ocr_engine = (ocr_engine_name or OCR_ENGINE).lower()
+    ocr_engine_names = (
+        ("rapidocr", "tesseract")
+        if selected_ocr_engine == "auto"
+        else (selected_ocr_engine,)
+    )
+    ocr_engines = {
+        engine_name: get_ocr_engine(engine_name)
+        for engine_name in ocr_engine_names
+    }
     ocr_trials = []
 
     for candidate_name, candidate_path in prep.get("ocr_candidates", {}).items():
         if not candidate_path or not Path(candidate_path).exists():
             continue
-        try:
-            candidate_text = ocr.extract_text(candidate_path)
-            ocr_trials.append({
-                "candidate_name": candidate_name,
-                "candidate_path": candidate_path,
-                "raw_text": candidate_text,
-                "score": score_ocr_text(candidate_text),
-            })
-        except Exception:
-            continue
+        for trial_engine_name, ocr in ocr_engines.items():
+            try:
+                candidate_text = ocr.extract_text(candidate_path)
+                ocr_trials.append({
+                    "candidate_name": candidate_name,
+                    "candidate_path": candidate_path,
+                    "engine_name": trial_engine_name,
+                    "raw_text": candidate_text,
+                    "score": score_ocr_text(candidate_text),
+                })
+            except Exception:
+                continue
 
     if not ocr_trials:
         raise ValueError(
@@ -297,6 +344,7 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
     raw_text = best_trial["raw_text"]
     best_candidate_name = best_trial["candidate_name"]
     best_candidate_path = best_trial["candidate_path"]
+    best_ocr_engine = best_trial["engine_name"]
 
     stem = Path(image_path).stem
     _save_ocr_text(session, stem, Path(image_path).name, raw_text)
@@ -313,6 +361,8 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
             "best_candidate_name": best_candidate_name,
             "best_candidate_path": best_candidate_path,
             "ocr_trials": ocr_trials,
+            "ocr_engine": selected_ocr_engine,
+            "best_ocr_engine": best_ocr_engine,
             "debug_steps": prep["steps"],
             "pipeline_path": "skipped_insufficient_ocr_text",
         }
@@ -327,14 +377,21 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
             "best_candidate_name": best_candidate_name,
             "best_candidate_path": best_candidate_path,
             "ocr_trials": ocr_trials,
+            "ocr_engine": selected_ocr_engine,
+            "best_ocr_engine": best_ocr_engine,
             "debug_steps": prep["steps"],
             "pipeline_path": "skipped_mrz_only",
         }
 
-    doc_type = _detect_doc_type(raw_text)
+    # Strip MRZ lines before AI extraction so bank cards or mixed images
+    # (e.g. bank card photographed next to an ID) don't have MRZ garbage
+    # confusing the model. The raw_text is kept intact for the report.
+    text_for_ai = _strip_mrz_lines(raw_text)
+
+    doc_type = _detect_doc_type(text_for_ai)
     extractor = get_ai_extractor("local")
     extracted = extractor.extract_from_text(
-        raw_text,
+        text_for_ai,
         source_description=f"Document type: {doc_type}",
     )
 
@@ -354,6 +411,8 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
         "best_candidate_name": best_candidate_name,
         "best_candidate_path": best_candidate_path,
         "ocr_trials": ocr_trials,
+        "ocr_engine": selected_ocr_engine,
+        "best_ocr_engine": best_ocr_engine,
         "raw_text": raw_text,
         "extracted_data": extracted,
         "debug_steps": prep["steps"],
@@ -363,7 +422,11 @@ def process_image_file(image_path: str, session: UploadSession) -> dict:
 
 # ── Document-type dispatchers ─────────────────────────────────────────────────
 
-def process_docx_file(docx_path: str, session: UploadSession) -> dict:
+def process_docx_file(
+    docx_path: str,
+    session: UploadSession,
+    ocr_engine_name: str | None = None,
+) -> dict:
     direct_text = extract_text_from_docx(docx_path)
     image_paths = extract_images_from_docx(docx_path, session)
     results = []
@@ -382,7 +445,7 @@ def process_docx_file(docx_path: str, session: UploadSession) -> dict:
         })
 
     for img_path in image_paths:
-        results.append(process_image_file(img_path, session))
+        results.append(process_image_file(img_path, session, ocr_engine_name=ocr_engine_name))
 
     merged = merge_extraction_results(results)
     return {
@@ -396,7 +459,11 @@ def process_docx_file(docx_path: str, session: UploadSession) -> dict:
     }
 
 
-def process_pdf_file(pdf_path: str, session: UploadSession) -> dict:
+def process_pdf_file(
+    pdf_path: str,
+    session: UploadSession,
+    ocr_engine_name: str | None = None,
+) -> dict:
     direct_text = extract_text_from_pdf_if_possible(pdf_path)
     results = []
 
@@ -431,13 +498,13 @@ def process_pdf_file(pdf_path: str, session: UploadSession) -> dict:
 
     for emb_img in embedded_images:
         try:
-            results.append(process_image_file(emb_img, session))
+            results.append(process_image_file(emb_img, session, ocr_engine_name=ocr_engine_name))
         except Exception as e:
             print(f"[WARN] Skipping embedded PDF image {emb_img}: {e}")
 
     for page_img in page_images:
         try:
-            results.append(process_image_file(page_img, session))
+            results.append(process_image_file(page_img, session, ocr_engine_name=ocr_engine_name))
         except Exception as e:
             print(f"[WARN] Skipping rendered PDF page image {page_img}: {e}")
 
@@ -459,15 +526,19 @@ def process_pdf_file(pdf_path: str, session: UploadSession) -> dict:
     }
 
 
-def process_single_file(file_path: str, session: UploadSession) -> dict:
+def process_single_file(
+    file_path: str,
+    session: UploadSession,
+    ocr_engine_name: str | None = None,
+) -> dict:
     suffix = Path(file_path).suffix.lower()
 
     if suffix in IMAGE_EXTENSIONS:
-        return process_image_file(file_path, session)
+        return process_image_file(file_path, session, ocr_engine_name=ocr_engine_name)
     if suffix in DOCX_EXTENSIONS:
-        return process_docx_file(file_path, session)
+        return process_docx_file(file_path, session, ocr_engine_name=ocr_engine_name)
     if suffix in PDF_EXTENSIONS:
-        return process_pdf_file(file_path, session)
+        return process_pdf_file(file_path, session, ocr_engine_name=ocr_engine_name)
 
     raise ValueError(f"Unsupported file type: {suffix}")
 
@@ -479,10 +550,13 @@ def process_uploaded_files(
     files=None,
     text_input: str | None = None,
     employee_id: int | None = None,
+    ocr_engine_name: str | None = None,
 ):
     files = files or []
+    selected_ocr_engine = (ocr_engine_name or OCR_ENGINE).lower()
     session = _create_upload_session()
     print(f"[INFO] Upload session: {session.name} ({session.session_dir})")
+    print(f"[INFO] OCR engine: {selected_ocr_engine}")
 
     all_results = []
     ocr_report_sections = []
@@ -495,7 +569,11 @@ def process_uploaded_files(
             continue
 
         saved_path = save_uploaded_file(upload_file, session)
-        result = process_single_file(saved_path, session)
+        result = process_single_file(
+            saved_path,
+            session,
+            ocr_engine_name=selected_ocr_engine,
+        )
         all_results.append(result)
 
         # Collect OCR text for the session report

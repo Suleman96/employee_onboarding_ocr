@@ -2,8 +2,11 @@
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env.local")
+
 UPLOADS_DIR = BASE_DIR / "uploads"
 
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -18,11 +21,15 @@ TESSERACT_PATH = os.getenv("TESSERACT_PATH", r"C:\Program Files\Tesseract-OCR\te
 # German, English, Polish, Russian, Turkish, Hungarian
 TESSERACT_LANGS = os.getenv("TESSERACT_LANGS", "deu+eng+rus")
 
+# Choose OCR engine: rapidocr, tesseract, or auto.
+# rapidocr is the default because it does not need a separate Windows install.
+OCR_ENGINE = os.getenv("OCR_ENGINE", "rapidocr").lower()
+
 
 # ─────────────────────────────────────────────────────────────
 # Local model settings
 # ─────────────────────────────────────────────────────────────
-LOCAL_TEXT_MODEL = os.getenv("LOCAL_TEXT_MODEL", "qwen2.5:7b")
+LOCAL_TEXT_MODEL = os.getenv("LOCAL_TEXT_MODEL", "mistral-nemo:12b")  # qwen2.5:7b
 LOCAL_VISION_MODEL = os.getenv("LOCAL_VISION_MODEL", "qwen2.5vl:7b")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
@@ -35,6 +42,7 @@ PAID_FALLBACK_ENABLED = os.getenv("PAID_FALLBACK_ENABLED", "false").lower() == "
 PAID_PROVIDER = os.getenv("PAID_PROVIDER", "mistral")
 
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
+MISTRAL_OCR_MODEL = os.getenv("MISTRAL_OCR_MODEL", "mistral-ocr-latest")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 # ─────────────────────────────────────────────────────────────

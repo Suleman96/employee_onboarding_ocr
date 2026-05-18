@@ -21,6 +21,7 @@ Return a JSON object with EXACTLY these fields:
   "country_of_birth": string or null,
   "nationality": string or null,
   "id_number": string or null,
+  "id_expiry": string or null,
   "passport_number": string or null,
   "passport_expiry": string or null,
   "working_permit_number": string or null,
@@ -63,6 +64,10 @@ German field name mappings:
   Geschlecht                                 -> gender
   Personalausweisnummer / Ausweis-Nr.       -> id_number
   Reisepassnummer / Pass-Nr.                -> passport_number
+  Dokumentennummer (when Dokumentenart = Personalausweis or Ausweis) -> id_number
+  Dokumentennummer (when Dokumentenart = Reisepass or Passport)      -> passport_number
+  Okmanyazonosito / Doc. No. (Hungarian)    -> id_number (if Personalausweis context) or passport_number (if passport context)
+  Ablaufdatum / Gueltig bis (for Personalausweis/ID card) -> id_expiry
   Ablaufdatum / Gueltig bis (for passport)  -> passport_expiry
   Aufenthaltstitel / Aufenthaltserlaubnis / Dokumentennummer (when document type is a residence permit)  -> working_permit_number
   Gueltig bis / Karte gueltig bis / Ablaufdatum (for residence permit)  -> working_permit_expiry
@@ -110,6 +115,11 @@ CRITICAL rules:
 - working_permit_number: extract the alphanumeric permit/document number from an Aufenthaltstitel or Aufenthaltserlaubnis card (e.g. "A43635334", "YYZ1JL8M7"). Usually starts with a letter (A, N, Y) followed by digits.
 - working_permit_expiry: the expiry date of the residence permit card. DD.MM.YYYY format. ONLY extract this from "Gueltig bis" or "Ablaufdatum" on the Aufenthaltstitel/Aufenthaltserlaubnis card itself. NEVER use the Meldedatum, "gemeldet seit", passport issue/expiry, or any other date as working_permit_expiry. If no clear expiry date is visible on a residence permit, use null.
 - country: the country of residence (where the person currently lives), NOT their nationality. For an address in Wien, use "Oesterreich". Do not copy nationality into country.
+- Dokumentennummer on a Meldezettel: the section "REISEDOKUMENT" contains both Dokumentenart (document type) and Dokumentennummer (document number). Read Dokumentenart first to determine the correct target field:
+  * Dokumentenart = Personalausweis / Ausweis / ID → put Dokumentennummer in id_number
+  * Dokumentenart = Reisepass / Passport           → put Dokumentennummer in passport_number
+  * Dokumentenart = Aufenthaltstitel               → put Dokumentennummer in working_permit_number
+- date_of_birth / passport_expiry / working_permit_expiry: always DD.MM.YYYY. If the day value exceeds 31 or the month value exceeds 12, you have swapped them — correct before returning.
 - Never invent values. If a field is empty or missing, use null.
 - Return valid JSON only, no explanations, no markdown.
 """
@@ -140,6 +150,12 @@ _COUNTRY_CODES = {
     "ARE","GBR","USA","URY","UZB","VUT","VEN","VNM","YEM","ZMB","ZWE",
 }
 
+_MONTHS = {
+    "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
+    "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
+    "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12",
+}
+
 
 def _parse_date(value: str) -> str | None:
     """Convert YYYYMMDD or YYYY-MM-DD to DD.MM.YYYY. Returns None if unrecognised."""
@@ -150,6 +166,223 @@ def _parse_date(value: str) -> str | None:
         parts = v.split("-")
         return f"{parts[2]}.{parts[1]}.{parts[0]}"
     return None
+
+
+def _parse_dmy_digits(value: str) -> str | None:
+    digits = re.sub(r"\D", "", value or "")
+    if len(digits) != 8:
+        return None
+    day = int(digits[:2])
+    month = int(digits[2:4])
+    if not (1 <= day <= 31 and 1 <= month <= 12):
+        return None
+    return f"{digits[:2]}.{digits[2:4]}.{digits[4:]}"
+
+
+def _parse_mrz_date(yymmdd: str, *, future: bool = False) -> str | None:
+    if not re.match(r"^\d{6}$", yymmdd or ""):
+        return None
+    yy = int(yymmdd[:2])
+    year = 2000 + yy if future or yy < 50 else 1900 + yy
+    month = int(yymmdd[2:4])
+    day = int(yymmdd[4:6])
+    if not (1 <= day <= 31 and 1 <= month <= 12):
+        return None
+    return f"{day:02d}.{month:02d}.{year}"
+
+
+def _extract_passport_mrz(text: str) -> dict:
+    """
+    Parse TD3 passport MRZ line 2.
+    Example: PU682392<5UKR8612283F32102151986122810466<88
+    """
+    extracted = {}
+    for raw_line in text.splitlines():
+        line = re.sub(r"\s+", "", raw_line.upper())
+        if "<" not in line:
+            continue
+        match = re.search(
+            r"([A-Z0-9<]{9})[0-9<]([A-Z<]{3})(\d{6})[0-9<]([MF<])(\d{6})[0-9<]",
+            line,
+        )
+        if not match:
+            continue
+
+        passport_number = match.group(1).replace("<", "")
+        dob = _parse_mrz_date(match.group(3))
+        expiry = _parse_mrz_date(match.group(5), future=True)
+
+        if passport_number:
+            extracted["passport_number"] = passport_number
+        if dob:
+            extracted["date_of_birth"] = dob
+        if expiry:
+            extracted["passport_expiry"] = expiry
+        break
+    return extracted
+
+
+def _extract_passport_expiry_from_text(text: str) -> str | None:
+    # Meldezettel / printed forms often have a clear DD.MM.YYYY Ablaufdatum.
+    match = re.search(
+        r"(?:Ablaufdatum|Date\s+of\s+expiry)[^\n\r]{0,80}?(\d{1,2})[.\-/ ](\d{1,2})[.\-/ ](\d{2,4})",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        day, month, year = match.groups()
+        if len(year) == 2:
+            year = f"20{year}"
+        return f"{int(day):02d}.{int(month):02d}.{year}"
+
+    match = re.search(
+        r"(?:Date\s+of\s+expiry|Ablaufdatum|Date\s+of\s+Expiry)[\s\S]{0,120}?(\d{1,2})\s+[A-ZÄÖÜ]{2,5}/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{2,4})",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        day, month_name, year = match.groups()
+        year = f"20{year}" if len(year) == 2 else year
+        month = _MONTHS[month_name.upper()]
+        return f"{int(day):02d}.{month}.{year}"
+
+    return None
+
+
+def _has_residence_permit_context(text: str) -> bool:
+    compact = re.sub(r"\s+", "", text.lower())
+    return any(
+        marker in compact
+        for marker in (
+            "aufenthaltstitel",
+            "aufenihaltstitel",
+            "residencepermit",
+            "ausweisfurvertriebene",
+            "ausweisfürvertriebene",
+        )
+    )
+
+
+def _has_identity_card_context(text: str) -> bool:
+    lowered = text.lower()
+    if _has_residence_permit_context(text):
+        return False
+    return any(
+        marker in lowered
+        for marker in (
+            "personalausweis",
+            "identity card",
+            "national id",
+            "ausweis-nr",
+            "ausweisnummer",
+        )
+    )
+
+
+def _extract_residence_permit_number(text: str) -> str | None:
+    if not _has_residence_permit_context(text):
+        return None
+
+    for line in text.splitlines():
+        if "<" in line:
+            continue
+        for candidate in re.findall(r"\b[A-Z]\d{7,9}\b", line.upper()):
+            return candidate
+    return None
+
+
+def _extract_residence_permit_expiry(text: str) -> str | None:
+    if not _has_residence_permit_context(text):
+        return None
+
+    compact = re.sub(r"[^A-Z0-9]", "", text.upper())
+    match = re.search(r"(?:KARTEGULTIGBIST|KARTEGULTIGBIS|GULTIGBIS|GUELTIGBIS)(\d{8})", compact)
+    if match:
+        return _parse_dmy_digits(match.group(1))
+
+    match = re.search(
+        r"(?:GULTIG|GUELTIG|VALID)[^\n\r]{0,40}?(\d{1,2})[.\-/ ](\d{1,2})[.\-/ ](\d{2,4})",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        day, month, year = match.groups()
+        year = f"20{year}" if len(year) == 2 else year
+        return f"{int(day):02d}.{int(month):02d}.{year}"
+
+    return None
+
+
+def _extract_bank_fields(text: str) -> dict:
+    fields = {}
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    for index, line in enumerate(lines):
+        upper = line.upper()
+        if upper == "BIC":
+            for candidate_line in lines[index + 1:index + 5]:
+                bic = re.sub(r"\s+", "", candidate_line.upper())
+                if re.match(r"^[A-Z0-9]{8}([A-Z0-9]{3})?$", bic) and not re.match(r"^[A-Z0-9]{15,34}$", bic):
+                    fields["bic"] = bic
+                    break
+        if upper == "IBAN":
+            for candidate_line in lines[index + 1:index + 6]:
+                iban = re.sub(r"\s+", "", candidate_line.upper())
+                if re.match(r"^[A-Z0-9]{15,34}$", iban):
+                    fields["iban"] = iban
+                    break
+    return fields
+
+
+def _apply_text_based_overrides(data: dict, text: str) -> dict:
+    warnings = list(data.get("warnings") or [])
+    lowered = text.lower()
+    residence_context = _has_residence_permit_context(text)
+
+    permit_number = _extract_residence_permit_number(text)
+    if permit_number and data.get("working_permit_number") != permit_number:
+        warnings.append(
+            f"working_permit_number set from residence permit text: {permit_number}."
+        )
+        data["working_permit_number"] = permit_number
+
+    permit_expiry = _extract_residence_permit_expiry(text)
+    if permit_expiry and data.get("working_permit_expiry") != permit_expiry:
+        warnings.append(
+            f"working_permit_expiry set from residence permit validity: {permit_expiry}."
+        )
+        data["working_permit_expiry"] = permit_expiry
+
+    if residence_context and data.get("id_number"):
+        warnings.append(
+            f"id_number '{data['id_number']}' cleared because this document is a residence permit."
+        )
+        data["id_number"] = None
+
+    if not _has_identity_card_context(text) and data.get("id_number"):
+        warnings.append(
+            f"id_number '{data['id_number']}' cleared because no Personalausweis/ID-card context was present."
+        )
+        data["id_number"] = None
+
+    passport_context = any(marker in lowered for marker in ("passport", "reisepass", "nacnopt"))
+    if passport_context:
+        mrz = _extract_passport_mrz(text)
+        passport_expiry = _extract_passport_expiry_from_text(text) or mrz.get("passport_expiry")
+        if mrz.get("passport_number") and not data.get("passport_number"):
+            data["passport_number"] = mrz["passport_number"]
+        if passport_expiry and data.get("passport_expiry") != passport_expiry:
+            warnings.append(
+                f"passport_expiry corrected from passport text/MRZ: {passport_expiry}."
+            )
+            data["passport_expiry"] = passport_expiry
+
+    bank_fields = _extract_bank_fields(text)
+    for key, value in bank_fields.items():
+        if not data.get(key):
+            data[key] = value
+
+    data["warnings"] = warnings
+    return data
 
 
 def _clean_string_fields(data: dict) -> dict:
@@ -168,7 +401,7 @@ def _normalize_extracted(data: dict) -> dict:
     data = _clean_string_fields(data)
 
     # Date fields: normalize YYYYMMDD and YYYY-MM-DD to DD.MM.YYYY
-    for date_field in ("date_of_birth", "working_permit_expiry", "passport_expiry"):
+    for date_field in ("date_of_birth", "id_expiry", "working_permit_expiry", "passport_expiry"):
         if data.get(date_field):
             converted = _parse_date(data[date_field])
             if converted:
@@ -176,6 +409,20 @@ def _normalize_extracted(data: dict) -> dict:
                     f"Converted {date_field} from '{data[date_field]}' to '{converted}'."
                 )
                 data[date_field] = converted
+
+    # Detect and correct swapped day/month in DD.MM.YYYY dates.
+    # The AI sometimes outputs MM.DD.YYYY (e.g. 03.18.2031) when OCR is ambiguous.
+    for date_field in ("date_of_birth", "id_expiry", "working_permit_expiry", "passport_expiry"):
+        val = data.get(date_field)
+        if val and re.match(r"^\d{2}\.\d{2}\.\d{4}$", str(val)):
+            parts = str(val).split(".")
+            day, month = int(parts[0]), int(parts[1])
+            if month > 12 and day <= 12:
+                fixed = f"{parts[1]}.{parts[0]}.{parts[2]}"
+                warnings.append(
+                    f"{date_field}: '{val}' has impossible month {month} — auto-corrected to '{fixed}'."
+                )
+                data[date_field] = fixed
 
     # place_of_birth: reject bare 2-3 letter country codes (MRZ artefacts like "UKR", "DEU")
     if data.get("place_of_birth"):
@@ -186,9 +433,28 @@ def _normalize_extracted(data: dict) -> dict:
             )
             data["place_of_birth"] = None
 
-    # IBAN: remove spaces, uppercase, validate length by country prefix
+    # IBAN: remove spaces, uppercase, fix OCR misreads, validate
     if data.get("iban"):
         iban = re.sub(r"\s+", "", data["iban"]).upper()
+
+        # Fix common OCR misreads in the 2-letter country code.
+        # Bank card fonts often cause T→1, E→3 or 6, H→4, etc.
+        _IBAN_CODE_FIXES = {
+            "A1": "AT", "A7": "AT",   # T misread as 1 or 7
+            "D0": "DE", "D3": "DE", "D6": "DE",  # E misread as 0, 3, or 6
+            "C4": "CH", "C8": "CH",   # H misread as 4 or 8
+            "P1": "PL", "P0": "PL",   # L misread as 1 or 0
+            "G8": "GB", "G6": "GB",   # B misread as 8 or 6
+            "F8": "FR", "F2": "FR",   # R misread as 8 or 2
+        }
+        prefix = iban[:2]
+        if prefix in _IBAN_CODE_FIXES:
+            corrected_prefix = _IBAN_CODE_FIXES[prefix]
+            warnings.append(
+                f"IBAN country code '{prefix}' auto-corrected to '{corrected_prefix}' (OCR misread of letter as digit)."
+            )
+            iban = corrected_prefix + iban[2:]
+
         data["iban"] = iban
         country_prefix = iban[:2] if len(iban) >= 2 else ""
         expected_len = _IBAN_LENGTHS.get(country_prefix)
@@ -345,6 +611,7 @@ Document text:
         text = result.get("response", "").strip()
 
         extracted = json.loads(text)
+        extracted = _apply_text_based_overrides(extracted, raw_text)
         extracted = _normalize_extracted(extracted)
         return extracted
 

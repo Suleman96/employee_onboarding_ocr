@@ -454,6 +454,16 @@
                                 placeholder="Leave empty for new employee"
                             >
                         </div>
+
+                        <div class="field">
+                            <label for="ocr_engine">OCR Engine</label>
+                            <select id="ocr_engine" name="ocr_engine">
+                                <option value="rapidocr" {% if selected_ocr_engine == 'rapidocr' %}selected{% endif %}>RapidOCR</option>
+                                <option value="tesseract" {% if selected_ocr_engine == 'tesseract' %}selected{% endif %}>Tesseract</option>
+                                <option value="mistral" {% if selected_ocr_engine == 'mistral' %}selected{% endif %}>Mistral OCR (cloud)</option>
+                                <option value="auto" {% if selected_ocr_engine == 'auto' %}selected{% endif %}>Auto fallback</option>
+                            </select>
+                        </div>
                     </div>
 
                     <button type="submit">Process Uploaded Documents</button>

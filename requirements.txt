@@ -25,7 +25,7 @@ opencv-python
 # Tesseract: install separately https://github.com/UB-Mannheim/tesseract/wiki
 # Add to PATH: C:\Program Files\Tesseract-OCR\tesseract.exe
 pytesseract
-
+rapidocr_onnxruntime
 easyocr
 
 # PaddleOCR (optional — heavy install, comment out if not needed)

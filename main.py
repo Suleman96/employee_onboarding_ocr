@@ -21,6 +21,7 @@ from database import create_tables, get_db, Employee, AuditLog
 from contracts.generator import convert_docx_to_pdf, generate_contract_for_employee
 from contracts.resolver import normalize_contract_attributes, resolve_template_path
 from pipeline import process_uploaded_files
+from config import OCR_ENGINE
 
 from pathlib import Path
 from typing import List
@@ -202,7 +203,7 @@ def upload_page(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="upload.html",
-        context={"form_data": {}}
+        context={"form_data": {}, "selected_ocr_engine": OCR_ENGINE}
     )
 
 @app.post("/upload/documents")
@@ -211,6 +212,7 @@ def upload_documents(
     files: list[UploadFile] = File(default=[]),
     text_input: str = Form(default=""),
     employee_id: int | None = Form(default=None),
+    ocr_engine: str = Form(default=OCR_ENGINE),
     db: Session = Depends(get_db),
 ):
     start_time = time.perf_counter()
@@ -220,6 +222,7 @@ def upload_documents(
             files=files,
             text_input=text_input,
             employee_id=employee_id,
+            ocr_engine_name=ocr_engine,
         )
         
         elapsed_seconds = time.perf_counter() - start_time
@@ -248,6 +251,8 @@ def upload_documents(
             name="upload.html",
             context={
                 "form_data": {},
+                "selected_ocr_engine": ocr_engine,
+                "error_message": f"Upload processing failed: {str(e)}",
                 "error": f"Upload processing failed: {str(e)}",
             },
             status_code=400,
